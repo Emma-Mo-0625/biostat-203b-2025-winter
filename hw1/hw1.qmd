@@ -49,13 +49,23 @@ This exercise (and later in this course) uses the [MIMIC-IV data v3.1](https://p
 ```{bash}
 #| eval: true
 # content of mimic folder
-ls -l ~/mimic/
+ls ~/mimic/mimic-iv-3.1
+
 ```
 Refer to the documentation <https://physionet.org/content/mimiciv/3.1/> for details of data files. Do **not** put these data files into Git; they are big. Do **not** copy them into your directory. Do **not** decompress the gz data files. These create unnecessary big files and are not big-data-friendly practices. Read from the data folder `~/mimic` directly in following exercises. 
 
   Use Bash commands to answer following questions.
 
+**Solution** I downloaded MIMIC IV v3.1 data to my computer and made it available at `~/mimic`.
+
 2. Display the contents in the folders `hosp` and `icu` using Bash command `ls -l`. Why are these data files distributed as `.csv.gz` files instead of `.csv` (comma separated values) files? Read the page <https://mimic.mit.edu/docs/iv/> to understand what's in each folder.
+
+**Solution** Here is the content of the `hosp` folder:
+
+```{bash}
+ls -l ~/mimic/mimic-iv-3.1/hosp
+
+```
 
 3. Briefly describe what Bash commands `zcat`, `zless`, `zmore`, and `zgrep` do.
 
