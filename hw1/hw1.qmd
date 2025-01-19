@@ -100,6 +100,7 @@ done
 zcat < ~/mimic/mimic-iv-3.1/hosp/admissions.csv.gz | head -5  # first five rows
 
 ```
+
 ```{bash}
 zcat < ~/mimic/mimic-iv-3.1/hosp/admissions.csv.gz | tail -n +2 | head -5  # exclude header row and display first five rows
 
@@ -133,13 +134,93 @@ zcat < ~/mimic/mimic-iv-3.1/hosp/admissions.csv.gz |
 awk -F, '{print $6}' | # prints the 6th column (admission_type)
 tail -n +2 | #skip the header row & start from the second row
 sort | #sort the values
-uniq -c  #get unique values (eliminate consecutive duplicates) and count them
+uniq -c | #get unique values (eliminate consecutive duplicates) and count them
+sort -nr #sort the count in descending order
 
 ```
 
-7. The `icusays.csv.gz` file contains all the ICU stays during the study period. How many ICU stays, identified by `stay_id`, are in this data file? How many unique patients, identified by `subject_id`, are in this data file?
+The possible values taken by `admission_location` is
+```{bash}
+zcat < ~/mimic/mimic-iv-3.1/hosp/admissions.csv.gz | 
+awk -F, '{print $8}' | tail -n +2 | sort | uniq -c | sort -nr
+```
+
+The possible values taken by `insurance` is
+```{bash}
+zcat < ~/mimic/mimic-iv-3.1/hosp/admissions.csv.gz | 
+awk -F, '{print $10}' | tail -n +2 | sort | uniq -c | sort -nr
+```
+
+The possible values taken by `ethnicity` is
+```{bash}
+zcat < ~/mimic/mimic-iv-3.1/hosp/admissions.csv.gz | 
+awk -F, '{print $13}' | tail -n +2 | sort | uniq -c | sort -nr
+```
+
+
+7. The `icustays.csv.gz` file contains all the ICU stays during the study period. How many ICU stays, identified by `stay_id`, are in this data file? How many unique patients, identified by `subject_id`, are in this data file?
+
+```{bash}
+zcat < ~/mimic/mimic-iv-3.1/icu/icustays.csv.gz | head -5
+
+```
+
+```{bash}
+zcat < ~/mimic/mimic-iv-3.1/icu/icustays.csv.gz | tail -n +2 | wc -l
+
+```
+
+Total number of ICU stays: 94458
+
+```{bash}
+zcat < ~/mimic/mimic-iv-3.1/icu/icustays.csv.gz | tail -n +2 | awk -F',' '{print $3}' | sort | uniq | wc -l
+
+```
+
+Number of unique ICU stays: 94458
+
+```{bash}
+zcat < ~/mimic/mimic-iv-3.1/icu/icustays.csv.gz | tail -n +2 | awk -F',' '{print $1}' | sort | uniq | wc -l
+
+```
+
+Number of unique patients, identified by `subject_id`, is 65366
 
 8. _To compress, or not to compress. That's the question._ Let's focus on the big data file `labevents.csv.gz`. Compare compressed gz file size to the uncompressed file size. Compare the run times of `zcat < ~/mimic/labevents.csv.gz | wc -l` versus `wc -l labevents.csv`. Discuss the trade off between storage and speed for big data files. (Hint: `gzip -dk < FILENAME.gz > ./FILENAME`. Remember to delete the large `labevents.csv` file after the exercise.)
+
+```{bash}
+ls -lh ~/mimic/mimic-iv-3.1/hosp/labevents.csv.gz # size of the compressed file
+
+```
+
+size of the compressed file: 2.4G
+
+```{bash}
+time zcat < ~/mimic/mimic-iv-3.1/hosp/labevents.csv.gz | wc -l # run time of compressed file
+```
+
+```{bash}
+gzip -dk < ~/mimic/mimic-iv-3.1/hosp/labevents.csv.gz > ~/mimic/mimic-iv-3.1/hosp/labevents.csv # decompress the file
+
+```
+
+```{bash}
+time wc -l ~/mimic/mimic-iv-3.1/hosp/labevents.csv # run time of uncompressed file
+```
+
+```{bash}
+ls -lh ~/mimic/mimic-iv-3.1/hosp/labevents.csv # size of the uncompressed file
+```
+
+Size of the uncompressed file: 17G
+
+```{bash}
+rm ~/mimic/mimic-iv-3.1/hosp/labevents.csv # delete the large labevents.csv file
+```
+
+
+The compressed file takes smaller storage, which saves significant disk space. However, the compressed file takes longer to read and process, which may slow down the analysis. 
+The uncompressed file is faster to read and process, but it takes up more disk space.
 
 ## Q4. Who's popular in Price and Prejudice
 

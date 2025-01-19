@@ -3303,23 +3303,170 @@ File: /Users/emma/mimic/mimic-iv-3.1/hosp/patients.csv.gz
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F,</span> <span class="st">&#39;{print $6}&#39;</span> <span class="kw">|</span> <span class="co"># prints the 6th column (admission_type)</span></span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="co">#skip the header row &amp; start from the second row</span></span>
 <span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sort</span> <span class="kw">|</span> <span class="co">#sort the values</span></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="fu">uniq</span> <span class="at">-c</span>  <span class="co">#get unique values (eliminate consecutive duplicates) and count them</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="fu">uniq</span> <span class="at">-c</span> <span class="kw">|</span> <span class="co">#get unique values (eliminate consecutive duplicates) and count them</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sort</span> <span class="at">-nr</span> <span class="co">#sort the count in descending order</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>7195 AMBULATORY OBSERVATION
-21973 DIRECT EMER.
-24551 DIRECT OBSERVATION
-13130 ELECTIVE
+<pre><code>177459 EW EMER.
 119456 EU OBSERVATION
-177459 EW EMER.
 84437 OBSERVATION ADMIT
+54929 URGENT
 42898 SURGICAL SAME DAY ADMISSION
-54929 URGENT</code></pre>
+24551 DIRECT OBSERVATION
+21973 DIRECT EMER.
+13130 ELECTIVE
+7195 AMBULATORY OBSERVATION</code></pre>
+</div>
+</div>
+<p>The possible values taken by <code>admission_location</code> is</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/mimic-iv-3.1/hosp/admissions.csv.gz <span class="kw">|</span> </span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F,</span> <span class="st">&#39;{print $8}&#39;</span> <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-nr</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>244179 EMERGENCY ROOM
+163228 PHYSICIAN REFERRAL
+56227 TRANSFER FROM HOSPITAL
+42365 WALK-IN/SELF REFERRAL
+12965 CLINIC REFERRAL
+8518 PROCEDURE SITE
+6317 TRANSFER FROM SKILLED NURSING FACILITY
+5837 INTERNAL TRANSFER TO OR FROM PSYCH
+5734 PACU
+ 402 INFORMATION NOT AVAILABLE
+ 255 AMBULATORY SURGERY TRANSFER
+   1 </code></pre>
+</div>
+</div>
+<p>The possible values taken by <code>insurance</code> is</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/mimic-iv-3.1/hosp/admissions.csv.gz <span class="kw">|</span> </span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F,</span> <span class="st">&#39;{print $10}&#39;</span> <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-nr</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>244576 Medicare
+173399 Private
+104229 Medicaid
+14006 Other
+9355 
+ 463 No charge</code></pre>
+</div>
+</div>
+<p>The possible values taken by <code>ethnicity</code> is</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/mimic-iv-3.1/hosp/admissions.csv.gz <span class="kw">|</span> </span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="at">-F,</span> <span class="st">&#39;{print $13}&#39;</span> <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="at">-c</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-nr</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>336538 WHITE
+75482 BLACK/AFRICAN AMERICAN
+19788 OTHER
+13972 WHITE - OTHER EUROPEAN
+13870 UNKNOWN
+10903 HISPANIC/LATINO - PUERTO RICAN
+8287 HISPANIC OR LATINO
+7809 ASIAN
+7644 ASIAN - CHINESE
+6597 WHITE - RUSSIAN
+6205 BLACK/CAPE VERDEAN
+6070 HISPANIC/LATINO - DOMINICAN
+3875 BLACK/CARIBBEAN ISLAND
+3495 BLACK/AFRICAN
+3478 UNABLE TO OBTAIN
+2162 PATIENT DECLINED TO ANSWER
+2082 PORTUGUESE
+1973 ASIAN - SOUTH EAST ASIAN
+1886 WHITE - EASTERN EUROPEAN
+1858 HISPANIC/LATINO - GUATEMALAN
+1661 ASIAN - ASIAN INDIAN
+1526 WHITE - BRAZILIAN
+1320 HISPANIC/LATINO - SALVADORAN
+1247 AMERICAN INDIAN/ALASKA NATIVE
+ 920 HISPANIC/LATINO - COLUMBIAN
+ 883 HISPANIC/LATINO - MEXICAN
+ 774 SOUTH AMERICAN
+ 725 HISPANIC/LATINO - HONDURAN
+ 664 ASIAN - KOREAN
+ 641 HISPANIC/LATINO - CUBAN
+ 603 HISPANIC/LATINO - CENTRAL AMERICAN
+ 596 MULTIPLE RACE/ETHNICITY
+ 494 NATIVE HAWAIIAN OR OTHER PACIFIC ISLANDER</code></pre>
 </div>
 </div>
 <ol start="7" type="1">
-<li><p>The <code>icusays.csv.gz</code> file contains all the ICU stays during the study period. How many ICU stays, identified by <code>stay_id</code>, are in this data file? How many unique patients, identified by <code>subject_id</code>, are in this data file?</p></li>
-<li><p><em>To compress, or not to compress. That’s the question.</em> Let’s focus on the big data file <code>labevents.csv.gz</code>. Compare compressed gz file size to the uncompressed file size. Compare the run times of <code>zcat &lt; ~/mimic/labevents.csv.gz | wc -l</code> versus <code>wc -l labevents.csv</code>. Discuss the trade off between storage and speed for big data files. (Hint: <code>gzip -dk &lt; FILENAME.gz &gt; ./FILENAME</code>. Remember to delete the large <code>labevents.csv</code> file after the exercise.)</p></li>
+<li>The <code>icustays.csv.gz</code> file contains all the ICU stays during the study period. How many ICU stays, identified by <code>stay_id</code>, are in this data file? How many unique patients, identified by <code>subject_id</code>, are in this data file?</li>
 </ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/mimic-iv-3.1/icu/icustays.csv.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-5</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>subject_id,hadm_id,stay_id,first_careunit,last_careunit,intime,outtime,los
+10000032,29079034,39553978,Medical Intensive Care Unit (MICU),Medical Intensive Care Unit (MICU),2180-07-23 14:00:00,2180-07-23 23:50:47,0.4102662037037037
+10000690,25860671,37081114,Medical Intensive Care Unit (MICU),Medical Intensive Care Unit (MICU),2150-11-02 19:37:00,2150-11-06 17:03:17,3.8932523148148146
+10000980,26913865,39765666,Medical Intensive Care Unit (MICU),Medical Intensive Care Unit (MICU),2189-06-27 08:42:00,2189-06-27 20:38:27,0.4975347222222222
+10001217,24597018,37067082,Surgical Intensive Care Unit (SICU),Surgical Intensive Care Unit (SICU),2157-11-20 19:18:02,2157-11-21 22:08:00,1.1180324074074075</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/mimic-iv-3.1/icu/icustays.csv.gz <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   94458</code></pre>
+</div>
+</div>
+<p>Total number of ICU stays: 94458</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/mimic-iv-3.1/icu/icustays.csv.gz <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">awk</span> <span class="at">-F</span><span class="st">&#39;,&#39;</span> <span class="st">&#39;{print $3}&#39;</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   94458</code></pre>
+</div>
+</div>
+<p>Number of unique ICU stays: 94458</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/mimic-iv-3.1/icu/icustays.csv.gz <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">awk</span> <span class="at">-F</span><span class="st">&#39;,&#39;</span> <span class="st">&#39;{print $1}&#39;</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   65366</code></pre>
+</div>
+</div>
+<p>Number of unique patients, identified by <code>subject_id</code>, is 65366</p>
+<ol start="8" type="1">
+<li><em>To compress, or not to compress. That’s the question.</em> Let’s focus on the big data file <code>labevents.csv.gz</code>. Compare compressed gz file size to the uncompressed file size. Compare the run times of <code>zcat &lt; ~/mimic/labevents.csv.gz | wc -l</code> versus <code>wc -l labevents.csv</code>. Discuss the trade off between storage and speed for big data files. (Hint: <code>gzip -dk &lt; FILENAME.gz &gt; ./FILENAME</code>. Remember to delete the large <code>labevents.csv</code> file after the exercise.)</li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-lh</span> ~/mimic/mimic-iv-3.1/hosp/labevents.csv.gz <span class="co"># size of the compressed file</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>-rw-r--r--  1 emma  staff   2.4G Oct  4 00:08 /Users/emma/mimic/mimic-iv-3.1/hosp/labevents.csv.gz</code></pre>
+</div>
+</div>
+<p>size of the compressed file: 2.4G</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="bu">time</span> zcat <span class="op">&lt;</span> ~/mimic/mimic-iv-3.1/hosp/labevents.csv.gz <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span> <span class="co"># run time of compressed file</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> 158374765
+
+real    0m29.788s
+user    0m38.135s
+sys 0m2.772s</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">gzip</span> <span class="at">-dk</span> <span class="op">&lt;</span> ~/mimic/mimic-iv-3.1/hosp/labevents.csv.gz <span class="op">&gt;</span> ~/mimic/mimic-iv-3.1/hosp/labevents.csv <span class="co"># decompress the file</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="bu">time</span> wc <span class="at">-l</span> ~/mimic/mimic-iv-3.1/hosp/labevents.csv <span class="co"># run time of uncompressed file</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> 158374765 /Users/emma/mimic/mimic-iv-3.1/hosp/labevents.csv
+
+real    0m14.976s
+user    0m10.600s
+sys 0m3.906s</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-lh</span> ~/mimic/mimic-iv-3.1/hosp/labevents.csv <span class="co"># size of the uncompressed file</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>-rw-r--r--  1 emma  staff    17G Jan 19 12:08 /Users/emma/mimic/mimic-iv-3.1/hosp/labevents.csv</code></pre>
+</div>
+</div>
+<p>Size of the uncompressed file: 17G</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> ~/mimic/mimic-iv-3.1/hosp/labevents.csv <span class="co"># delete the large labevents.csv file</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The compressed file takes smaller storage, which saves significant disk space. However, the compressed file takes longer to read and process, which may slow down the analysis. The uncompressed file is faster to read and process, but it takes up more disk space.</p>
 </section>
 <section id="q4.-whos-popular-in-price-and-prejudice" class="level2">
 <h2 class="anchored" data-anchor-id="q4.-whos-popular-in-price-and-prejudice">Q4. Who’s popular in Price and Prejudice</h2>
@@ -3327,39 +3474,39 @@ File: /Users/emma/mimic/mimic-iv-3.1/hosp/patients.csv.gz
 <li>You and your friend just have finished reading <em>Pride and Prejudice</em> by Jane Austen. Among the four main characters in the book, Elizabeth, Jane, Lydia, and Darcy, your friend thinks that Darcy was the most mentioned. You, however, are certain it was Elizabeth. Obtain the full text of the novel from <a href="http://www.gutenberg.org/cache/epub/42671/pg42671.txt" class="uri">http://www.gutenberg.org/cache/epub/42671/pg42671.txt</a> and save to your local folder.</li>
 </ol>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> <span class="at">-nc</span> http://www.gutenberg.org/cache/epub/42671/pg42671.txt</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> <span class="at">-nc</span> http://www.gutenberg.org/cache/epub/42671/pg42671.txt</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Explain what <code>wget -nc</code> does. Do <strong>not</strong> put this text file <code>pg42671.txt</code> in Git. Complete the following loop to tabulate the number of times each of the four characters is mentioned using Linux commands.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> <span class="at">-nc</span> http://www.gutenberg.org/cache/epub/42671/pg42671.txt</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> char <span class="kw">in</span> Elizabeth Jane Lydia Darcy</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="cf">do</span></span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="va">$char</span>:</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># some bash commands here</span></span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> <span class="at">-nc</span> http://www.gutenberg.org/cache/epub/42671/pg42671.txt</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> char <span class="kw">in</span> Elizabeth Jane Lydia Darcy</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="cf">do</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="va">$char</span>:</span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># some bash commands here</span></span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <ol start="2" type="1">
 <li>What’s the difference between the following two commands?</li>
 </ol>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&#39;hello, world&#39;</span> <span class="op">&gt;</span> test1.txt</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&#39;hello, world&#39;</span> <span class="op">&gt;</span> test1.txt</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>and</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&#39;hello, world&#39;</span> <span class="op">&gt;&gt;</span> test2.txt</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&#39;hello, world&#39;</span> <span class="op">&gt;&gt;</span> test2.txt</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <ol start="3" type="1">
 <li>Using your favorite text editor (e.g., <code>vi</code>), type the following and save the file as <code>middle.sh</code>:</li>
 </ol>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/sh</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Select lines from the middle of a file.</span></span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Usage: bash middle.sh filename end_line num_lines</span></span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-n</span> <span class="st">&quot;</span><span class="va">$2</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> <span class="st">&quot;</span><span class="va">$3</span><span class="st">&quot;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/sh</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Select lines from the middle of a file.</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Usage: bash middle.sh filename end_line num_lines</span></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-n</span> <span class="st">&quot;</span><span class="va">$2</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> <span class="st">&quot;</span><span class="va">$3</span><span class="st">&quot;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Using <code>chmod</code> to make the file executable by the owner, and run</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./middle.sh</span> pg42671.txt 20 5</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./middle.sh</span> pg42671.txt 20 5</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Explain the output. Explain the meaning of <code>&quot;$1&quot;</code>, <code>&quot;$2&quot;</code>, and <code>&quot;$3&quot;</code> in this shell script. Why do we need the first line of the shell script?</p>
 </section>
