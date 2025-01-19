@@ -270,9 +270,86 @@ Using `chmod` to make the file executable by the owner, and run
 ```
 Explain the output. Explain the meaning of `"$1"`, `"$2"`, and `"$3"` in this shell script. Why do we need the first line of the shell script?
 
+**Solution** The output is the last 5 lines of the first 20 lines of the file `pg42671.txt`.
+"$1": Input file (pg42671.txt).
+"$2": script extracts the first 20 lines.
+"$3": script extracts the last 5 lines (tail) from the first 20 lines.
+This means that line 16-20 of the file `pg42671.txt` are displayed.
+
+The first Line of the Script (#!/bin/sh) is called a shebang. It tells the system which interpreter to use to run the script. In this case, it specifies the sh shell interpreter.
+
 ## Q5. More fun with Linux
 
 Try following commands in Bash and interpret the results: `cal`, `cal 2025`, `cal 9 1752` (anything unusual?), `date`, `hostname`, `arch`, `uname -a`, `uptime`, `who am i`, `who`, `w`, `id`, `last | head`, `echo {con,pre}{sent,fer}{s,ed}`, `time sleep 5`, `history | tail`.
+
+```{bash}
+cal  #Displays the calendar for the current month
+```
+
+```{bash}
+cal 2025  #Displays the calendar for the year 2025
+```
+
+```{bash}
+cal 9 1752  
+#Displays the calendar for September 1752. The calendar skips 11 days from September 2 to September 14, 1752, due to the adoption of the Gregorian calendar.
+```
+
+```{bash}
+date  # current date and time
+```
+
+
+```{bash}
+hostname # the hostname of the system
+```
+
+```{bash}
+arch # system architecture
+```
+
+```{bash}
+uname -a  # system information
+```
+
+
+```{bash}
+uptime  #system uptime, number of users, and load average
+```
+
+```{bash}
+who am i  # current user, terminal, and time
+```
+
+```{bash}
+who  # logged in users, terminal, and time of login
+```
+
+```{bash}
+w # who is logged in, when and what they are doing, and system load
+```
+
+
+```{bash}
+id  # user and group information
+```
+
+```{bash}
+last | head  # last logged in users, terminal, and time
+```
+
+```{bash}
+echo {con,pre}{sent,fer}{s,ed} # concatenates words to form new words
+```
+
+```{bash}
+time sleep 5 # time taken to sleep for 5 seconds
+```
+
+```{bash}
+history | tail # last few commands
+```
+
 
 ## Q6. Book
 
