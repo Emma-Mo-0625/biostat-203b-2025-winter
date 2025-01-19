@@ -230,13 +230,15 @@ The uncompressed file is faster to read and process, but it takes up more disk s
 wget -nc http://www.gutenberg.org/cache/epub/42671/pg42671.txt
 ```
 Explain what `wget -nc` does. Do **not** put this text file `pg42671.txt` in Git. Complete the following loop to tabulate the number of times each of the four characters is mentioned using Linux commands.
+
+**Solution** `wget -nc` downloads the file only if it doesn't exist in the current directory.
+
 ```{bash}
 #| eval: false
-wget -nc http://www.gutenberg.org/cache/epub/42671/pg42671.txt
 for char in Elizabeth Jane Lydia Darcy
 do
   echo $char:
-  # some bash commands here
+  grep -o "$char" pg42671.txt | wc -l  # count the number of times each character is mentioned
 done
 ```
 
@@ -250,6 +252,9 @@ and
 #| eval: false
 echo 'hello, world' >> test2.txt
 ```
+
+'>' overwrites the file, potentially deleting its previous content. If the file does not exist, it is created.
+'>>' appends the text to the end of the file, preserving its previous content.
 
 3. Using your favorite text editor (e.g., `vi`), type the following and save the file as `middle.sh`:
 ```{bash eval=FALSE}
