@@ -3,7 +3,7 @@ title: "Biostat 203B Homework 1"
 subtitle: Due Jan 24, 2025 @ 11:59PM
 author: Emma Mo and 906542365
 format:
-  html:
+  pdf:
     theme: cosmo
     embed-resources: true
     number-sections: false
@@ -17,7 +17,6 @@ format:
 
 Display machine information for reproducibility:
 ```{r}
-#| eval: true
 sessionInfo()
 ```
 
