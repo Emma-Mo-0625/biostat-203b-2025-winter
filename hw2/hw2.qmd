@@ -177,6 +177,14 @@ It's taking more than 3 minutes. read_csv() loads the entire dataset into memory
 
 Try to ingest only columns `subject_id`, `itemid`, `charttime`, and `valuenum` in `labevents.csv.gz` using `read_csv`.  Does this solve the ingestion issue? (Hint: `col_select` argument in `read_csv`.)
 
+```{r}
+# labevents <- "~/mimic/hosp/labevents.csv.gz"
+# df_labs_selected <- read_csv(labevents, col_select = c(subject_id, itemid, charttime, valuenum))
+# str(df_labs_selected)
+```
+
+It's still taking very long. This is because read_csv() still reads the whole file line by line, and only keeps the selected columns.
+
 ### Q2.3 Ingest a subset of `labevents.csv.gz`
 
 <p align="center">
