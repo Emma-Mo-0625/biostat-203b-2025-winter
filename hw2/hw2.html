@@ -3283,8 +3283,8 @@ Attaching package: &#39;R.utils&#39;</code></pre>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>memuse<span class="sc">::</span><span class="fu">Sys.meminfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Totalram:  16.000 GiB 
-Freeram:   40.781 MiB </code></pre>
+<pre><code>Totalram:   16.000 GiB 
+Freeram:   208.836 MiB </code></pre>
 </div>
 </div>
 <p>In this exercise, we explore various tools for ingesting the <a href="https://physionet.org/content/mimiciv/3.1/">MIMIC-IV</a> data introduced in <a href="https://ucla-biostat-203b.github.io/2025winter/hw/hw1/hw1.html">homework 1</a>.</p>
@@ -3337,11 +3337,245 @@ Freeram:   40.781 MiB </code></pre>
 <section id="q1.1-speed-memory-and-data-types" class="level3">
 <h3 class="anchored" data-anchor-id="q1.1-speed-memory-and-data-types">Q1.1 Speed, memory, and data types</h3>
 <p>There are quite a few utilities in R for reading plain text data files. Let us test the speed of reading a moderate sized compressed csv file, <code>admissions.csv.gz</code>, by three functions: <code>read.csv</code> in base R, <code>read_csv</code> in tidyverse, and <code>fread</code> in the data.table package.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>admissions <span class="ot">&lt;-</span> <span class="st">&quot;~/mimic/hosp/admissions.csv.gz&quot;</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pryr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Measure speed and memory usage for read.csv (Base R)</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(df_base <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(admissions))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   user  system elapsed 
+ 10.155   0.223  10.446 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>memory_base <span class="ot">&lt;-</span> <span class="fu">object_size</span>(df_base)</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(df_base)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>&#39;data.frame&#39;:   546028 obs. of  16 variables:
+ $ subject_id          : int  10000032 10000032 10000032 10000032 10000068 10000084 10000084 10000108 10000117 10000117 ...
+ $ hadm_id             : int  22595853 22841357 25742920 29079034 25022803 23052089 29888819 27250926 22927623 27988844 ...
+ $ admittime           : chr  &quot;2180-05-06 22:23:00&quot; &quot;2180-06-26 18:27:00&quot; &quot;2180-08-05 23:44:00&quot; &quot;2180-07-23 12:35:00&quot; ...
+ $ dischtime           : chr  &quot;2180-05-07 17:15:00&quot; &quot;2180-06-27 18:49:00&quot; &quot;2180-08-07 17:50:00&quot; &quot;2180-07-25 17:55:00&quot; ...
+ $ deathtime           : chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...
+ $ admission_type      : chr  &quot;URGENT&quot; &quot;EW EMER.&quot; &quot;EW EMER.&quot; &quot;EW EMER.&quot; ...
+ $ admit_provider_id   : chr  &quot;P49AFC&quot; &quot;P784FA&quot; &quot;P19UTS&quot; &quot;P06OTX&quot; ...
+ $ admission_location  : chr  &quot;TRANSFER FROM HOSPITAL&quot; &quot;EMERGENCY ROOM&quot; &quot;EMERGENCY ROOM&quot; &quot;EMERGENCY ROOM&quot; ...
+ $ discharge_location  : chr  &quot;HOME&quot; &quot;HOME&quot; &quot;HOSPICE&quot; &quot;HOME&quot; ...
+ $ insurance           : chr  &quot;Medicaid&quot; &quot;Medicaid&quot; &quot;Medicaid&quot; &quot;Medicaid&quot; ...
+ $ language            : chr  &quot;English&quot; &quot;English&quot; &quot;English&quot; &quot;English&quot; ...
+ $ marital_status      : chr  &quot;WIDOWED&quot; &quot;WIDOWED&quot; &quot;WIDOWED&quot; &quot;WIDOWED&quot; ...
+ $ race                : chr  &quot;WHITE&quot; &quot;WHITE&quot; &quot;WHITE&quot; &quot;WHITE&quot; ...
+ $ edregtime           : chr  &quot;2180-05-06 19:17:00&quot; &quot;2180-06-26 15:54:00&quot; &quot;2180-08-05 20:58:00&quot; &quot;2180-07-23 05:54:00&quot; ...
+ $ edouttime           : chr  &quot;2180-05-06 23:30:00&quot; &quot;2180-06-26 21:31:00&quot; &quot;2180-08-06 01:44:00&quot; &quot;2180-07-23 14:00:00&quot; ...
+ $ hospital_expire_flag: int  0 0 0 0 0 0 0 0 0 0 ...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>memory_base</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>200.10 MB</code></pre>
+</div>
+</div>
+<ul>
+<li>speed: 5.676s</li>
+<li>memory: 200.1 MB</li>
+<li>data type: int and chr (string)</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Measure speed and memory usage for read_csv (tidyverse)</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(df_tidy <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(admissions))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Rows: 546028 Columns: 16
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: &quot;,&quot;
+chr  (8): admission_type, admit_provider_id, admission_location, discharge_l...
+dbl  (3): subject_id, hadm_id, hospital_expire_flag
+dttm (5): admittime, dischtime, deathtime, edregtime, edouttime
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   user  system elapsed 
+  3.128   1.369   1.499 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>memory_tidy <span class="ot">&lt;-</span> <span class="fu">object_size</span>(df_tidy)</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(df_tidy)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>spc_tbl_ [546,028 × 16] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
+ $ subject_id          : num [1:546028] 1e+07 1e+07 1e+07 1e+07 1e+07 ...
+ $ hadm_id             : num [1:546028] 22595853 22841357 25742920 29079034 25022803 ...
+ $ admittime           : POSIXct[1:546028], format: &quot;2180-05-06 22:23:00&quot; &quot;2180-06-26 18:27:00&quot; ...
+ $ dischtime           : POSIXct[1:546028], format: &quot;2180-05-07 17:15:00&quot; &quot;2180-06-27 18:49:00&quot; ...
+ $ deathtime           : POSIXct[1:546028], format: NA NA ...
+ $ admission_type      : chr [1:546028] &quot;URGENT&quot; &quot;EW EMER.&quot; &quot;EW EMER.&quot; &quot;EW EMER.&quot; ...
+ $ admit_provider_id   : chr [1:546028] &quot;P49AFC&quot; &quot;P784FA&quot; &quot;P19UTS&quot; &quot;P06OTX&quot; ...
+ $ admission_location  : chr [1:546028] &quot;TRANSFER FROM HOSPITAL&quot; &quot;EMERGENCY ROOM&quot; &quot;EMERGENCY ROOM&quot; &quot;EMERGENCY ROOM&quot; ...
+ $ discharge_location  : chr [1:546028] &quot;HOME&quot; &quot;HOME&quot; &quot;HOSPICE&quot; &quot;HOME&quot; ...
+ $ insurance           : chr [1:546028] &quot;Medicaid&quot; &quot;Medicaid&quot; &quot;Medicaid&quot; &quot;Medicaid&quot; ...
+ $ language            : chr [1:546028] &quot;English&quot; &quot;English&quot; &quot;English&quot; &quot;English&quot; ...
+ $ marital_status      : chr [1:546028] &quot;WIDOWED&quot; &quot;WIDOWED&quot; &quot;WIDOWED&quot; &quot;WIDOWED&quot; ...
+ $ race                : chr [1:546028] &quot;WHITE&quot; &quot;WHITE&quot; &quot;WHITE&quot; &quot;WHITE&quot; ...
+ $ edregtime           : POSIXct[1:546028], format: &quot;2180-05-06 19:17:00&quot; &quot;2180-06-26 15:54:00&quot; ...
+ $ edouttime           : POSIXct[1:546028], format: &quot;2180-05-06 23:30:00&quot; &quot;2180-06-26 21:31:00&quot; ...
+ $ hospital_expire_flag: num [1:546028] 0 0 0 0 0 0 0 0 0 0 ...
+ - attr(*, &quot;spec&quot;)=
+  .. cols(
+  ..   subject_id = col_double(),
+  ..   hadm_id = col_double(),
+  ..   admittime = col_datetime(format = &quot;&quot;),
+  ..   dischtime = col_datetime(format = &quot;&quot;),
+  ..   deathtime = col_datetime(format = &quot;&quot;),
+  ..   admission_type = col_character(),
+  ..   admit_provider_id = col_character(),
+  ..   admission_location = col_character(),
+  ..   discharge_location = col_character(),
+  ..   insurance = col_character(),
+  ..   language = col_character(),
+  ..   marital_status = col_character(),
+  ..   race = col_character(),
+  ..   edregtime = col_datetime(format = &quot;&quot;),
+  ..   edouttime = col_datetime(format = &quot;&quot;),
+  ..   hospital_expire_flag = col_double()
+  .. )
+ - attr(*, &quot;problems&quot;)=&lt;externalptr&gt; </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>memory_tidy</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>70.02 MB</code></pre>
+</div>
+</div>
+<ul>
+<li>speed: 1.432s</li>
+<li>memory: 70.02 MB</li>
+<li>data type: num, chr (string), POSIXct (datetime)</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Measure speed and memory usage for fread (data.table)</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(df_dt <span class="ot">&lt;-</span> <span class="fu">fread</span>(admissions))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   user  system elapsed 
+  1.742   0.362   1.041 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>memory_dt <span class="ot">&lt;-</span> <span class="fu">object_size</span>(df_dt)</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(df_dt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Classes &#39;data.table&#39; and &#39;data.frame&#39;:  546028 obs. of  16 variables:
+ $ subject_id          : int  10000032 10000032 10000032 10000032 10000068 10000084 10000084 10000108 10000117 10000117 ...
+ $ hadm_id             : int  22595853 22841357 25742920 29079034 25022803 23052089 29888819 27250926 22927623 27988844 ...
+ $ admittime           : POSIXct, format: &quot;2180-05-06 22:23:00&quot; &quot;2180-06-26 18:27:00&quot; ...
+ $ dischtime           : POSIXct, format: &quot;2180-05-07 17:15:00&quot; &quot;2180-06-27 18:49:00&quot; ...
+ $ deathtime           : POSIXct, format: NA NA ...
+ $ admission_type      : chr  &quot;URGENT&quot; &quot;EW EMER.&quot; &quot;EW EMER.&quot; &quot;EW EMER.&quot; ...
+ $ admit_provider_id   : chr  &quot;P49AFC&quot; &quot;P784FA&quot; &quot;P19UTS&quot; &quot;P06OTX&quot; ...
+ $ admission_location  : chr  &quot;TRANSFER FROM HOSPITAL&quot; &quot;EMERGENCY ROOM&quot; &quot;EMERGENCY ROOM&quot; &quot;EMERGENCY ROOM&quot; ...
+ $ discharge_location  : chr  &quot;HOME&quot; &quot;HOME&quot; &quot;HOSPICE&quot; &quot;HOME&quot; ...
+ $ insurance           : chr  &quot;Medicaid&quot; &quot;Medicaid&quot; &quot;Medicaid&quot; &quot;Medicaid&quot; ...
+ $ language            : chr  &quot;English&quot; &quot;English&quot; &quot;English&quot; &quot;English&quot; ...
+ $ marital_status      : chr  &quot;WIDOWED&quot; &quot;WIDOWED&quot; &quot;WIDOWED&quot; &quot;WIDOWED&quot; ...
+ $ race                : chr  &quot;WHITE&quot; &quot;WHITE&quot; &quot;WHITE&quot; &quot;WHITE&quot; ...
+ $ edregtime           : POSIXct, format: &quot;2180-05-06 19:17:00&quot; &quot;2180-06-26 15:54:00&quot; ...
+ $ edouttime           : POSIXct, format: &quot;2180-05-06 23:30:00&quot; &quot;2180-06-26 21:31:00&quot; ...
+ $ hospital_expire_flag: int  0 0 0 0 0 0 0 0 0 0 ...
+ - attr(*, &quot;.internal.selfref&quot;)=&lt;externalptr&gt; </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>memory_dt</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>63.47 MB</code></pre>
+</div>
+</div>
+<ul>
+<li>speed: 0.979s</li>
+<li>memory: 63.47 MB</li>
+<li>data type: int, chr (string), POSIXct (datetime)</li>
+</ul>
 <p>Which function is fastest? Is there difference in the (default) parsed data types? How much memory does each resultant dataframe or tibble use? (Hint: <code>system.time</code> measures run times; <code>pryr::object_size</code> measures memory usage; all these readers can take gz file as input without explicit decompression.)</p>
+<ul>
+<li><code>fread</code> in the data.table package is the fastest and uses the least memory.</li>
+<li><code>read.csv</code> in base R is the slowest and uses the largest memory.</li>
+<li>Base R (read.csv) treats all dates (admittime, dischtime, etc.) as characters (chr), requiring manual conversion to datetime. Tidyverse (read_csv) and data.table (fread) automatically parse them as POSIXct (datetime), making them immediately usable for date calculations.</li>
+</ul>
 </section>
 <section id="q1.2-user-supplied-data-types" class="level3">
 <h3 class="anchored" data-anchor-id="q1.2-user-supplied-data-types">Q1.2 User-supplied data types</h3>
 <p>Re-ingest <code>admissions.csv.gz</code> by indicating appropriate column data types in <code>read_csv</code>. Does the run time change? How much memory does the result tibble use? (Hint: <code>col_types</code> argument in <code>read_csv</code>.)</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>col_types_spec <span class="ot">&lt;-</span> <span class="fu">cols</span>(</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">subject_id =</span> <span class="fu">col_integer</span>(),</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">hadm_id =</span> <span class="fu">col_integer</span>(),</span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">admittime =</span> <span class="fu">col_datetime</span>(<span class="at">format =</span> <span class="st">&quot;&quot;</span>),</span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">dischtime =</span> <span class="fu">col_datetime</span>(<span class="at">format =</span> <span class="st">&quot;&quot;</span>),</span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">deathtime =</span> <span class="fu">col_datetime</span>(<span class="at">format =</span> <span class="st">&quot;&quot;</span>),</span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">admission_type =</span> <span class="fu">col_character</span>(),</span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">admit_provider_id =</span> <span class="fu">col_character</span>(),</span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">admission_location =</span> <span class="fu">col_character</span>(),</span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">discharge_location =</span> <span class="fu">col_character</span>(),</span>
+<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">insurance =</span> <span class="fu">col_character</span>(),</span>
+<span id="cb54-12"><a href="#cb54-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">language =</span> <span class="fu">col_character</span>(),</span>
+<span id="cb54-13"><a href="#cb54-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">marital_status =</span> <span class="fu">col_character</span>(),</span>
+<span id="cb54-14"><a href="#cb54-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">race =</span> <span class="fu">col_character</span>(),</span>
+<span id="cb54-15"><a href="#cb54-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">edregtime =</span> <span class="fu">col_datetime</span>(<span class="at">format =</span> <span class="st">&quot;&quot;</span>),</span>
+<span id="cb54-16"><a href="#cb54-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">edouttime =</span> <span class="fu">col_datetime</span>(<span class="at">format =</span> <span class="st">&quot;&quot;</span>),</span>
+<span id="cb54-17"><a href="#cb54-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">hospital_expire_flag =</span> <span class="fu">col_integer</span>()</span>
+<span id="cb54-18"><a href="#cb54-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb54-19"><a href="#cb54-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-20"><a href="#cb54-20" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(df_tidy_optimized <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(admissions, <span class="at">col_types =</span> col_types_spec))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   user  system elapsed 
+  2.938   1.614   1.466 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>memory_tidy_optimized <span class="ot">&lt;-</span> <span class="fu">object_size</span>(df_tidy_optimized)</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(df_tidy_optimized)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>spc_tbl_ [546,028 × 16] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
+ $ subject_id          : int [1:546028] 10000032 10000032 10000032 10000032 10000068 10000084 10000084 10000108 10000117 10000117 ...
+ $ hadm_id             : int [1:546028] 22595853 22841357 25742920 29079034 25022803 23052089 29888819 27250926 22927623 27988844 ...
+ $ admittime           : POSIXct[1:546028], format: &quot;2180-05-06 22:23:00&quot; &quot;2180-06-26 18:27:00&quot; ...
+ $ dischtime           : POSIXct[1:546028], format: &quot;2180-05-07 17:15:00&quot; &quot;2180-06-27 18:49:00&quot; ...
+ $ deathtime           : POSIXct[1:546028], format: NA NA ...
+ $ admission_type      : chr [1:546028] &quot;URGENT&quot; &quot;EW EMER.&quot; &quot;EW EMER.&quot; &quot;EW EMER.&quot; ...
+ $ admit_provider_id   : chr [1:546028] &quot;P49AFC&quot; &quot;P784FA&quot; &quot;P19UTS&quot; &quot;P06OTX&quot; ...
+ $ admission_location  : chr [1:546028] &quot;TRANSFER FROM HOSPITAL&quot; &quot;EMERGENCY ROOM&quot; &quot;EMERGENCY ROOM&quot; &quot;EMERGENCY ROOM&quot; ...
+ $ discharge_location  : chr [1:546028] &quot;HOME&quot; &quot;HOME&quot; &quot;HOSPICE&quot; &quot;HOME&quot; ...
+ $ insurance           : chr [1:546028] &quot;Medicaid&quot; &quot;Medicaid&quot; &quot;Medicaid&quot; &quot;Medicaid&quot; ...
+ $ language            : chr [1:546028] &quot;English&quot; &quot;English&quot; &quot;English&quot; &quot;English&quot; ...
+ $ marital_status      : chr [1:546028] &quot;WIDOWED&quot; &quot;WIDOWED&quot; &quot;WIDOWED&quot; &quot;WIDOWED&quot; ...
+ $ race                : chr [1:546028] &quot;WHITE&quot; &quot;WHITE&quot; &quot;WHITE&quot; &quot;WHITE&quot; ...
+ $ edregtime           : POSIXct[1:546028], format: &quot;2180-05-06 19:17:00&quot; &quot;2180-06-26 15:54:00&quot; ...
+ $ edouttime           : POSIXct[1:546028], format: &quot;2180-05-06 23:30:00&quot; &quot;2180-06-26 21:31:00&quot; ...
+ $ hospital_expire_flag: int [1:546028] 0 0 0 0 0 0 0 0 0 0 ...
+ - attr(*, &quot;spec&quot;)=
+  .. cols(
+  ..   subject_id = col_integer(),
+  ..   hadm_id = col_integer(),
+  ..   admittime = col_datetime(format = &quot;&quot;),
+  ..   dischtime = col_datetime(format = &quot;&quot;),
+  ..   deathtime = col_datetime(format = &quot;&quot;),
+  ..   admission_type = col_character(),
+  ..   admit_provider_id = col_character(),
+  ..   admission_location = col_character(),
+  ..   discharge_location = col_character(),
+  ..   insurance = col_character(),
+  ..   language = col_character(),
+  ..   marital_status = col_character(),
+  ..   race = col_character(),
+  ..   edregtime = col_datetime(format = &quot;&quot;),
+  ..   edouttime = col_datetime(format = &quot;&quot;),
+  ..   hospital_expire_flag = col_integer()
+  .. )
+ - attr(*, &quot;problems&quot;)=&lt;externalptr&gt; </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>memory_tidy_optimized</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>63.47 MB</code></pre>
+</div>
+</div>
+<ul>
+<li>New run time: 1.241s</li>
+<li>New memory: 63.47 MB</li>
+<li>The run time is slightly faster (1.241s &lt; 1.432s) and the memory usage also decreased slightly (63.47 MB &lt; 70.02 MB).</li>
+</ul>
 </section>
 </section>
 <section id="q2.-ingest-big-data-files" class="level2">
@@ -3351,14 +3585,14 @@ Freeram:   40.781 MiB </code></pre>
 </p>
 <p>Let us focus on a bigger file, <code>labevents.csv.gz</code>, which is about 130x bigger than <code>admissions.csv.gz</code>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-l</span> ~/mimic/hosp/labevents.csv.gz</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-l</span> ~/mimic/hosp/labevents.csv.gz</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>-rw-r--r--  1 emma  staff  2592909134 Oct  4 00:08 /Users/emma/mimic/hosp/labevents.csv.gz</code></pre>
 </div>
 </div>
 <p>Display the first 10 lines of this file.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/hosp/labevents.csv.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/hosp/labevents.csv.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>labevent_id,subject_id,hadm_id,specimen_id,itemid,order_provider_id,charttime,storetime,value,valuenum,valueuom,ref_range_lower,ref_range_upper,flag,priority,comments
 1,10000032,,2704548,50931,P69FQC,2180-03-23 11:51:00,2180-03-23 15:56:00,___,95,mg/dL,70,100,,ROUTINE,&quot;IF FASTING, 70-100 NORMAL, &gt;125 PROVISIONAL DIABETES.&quot;
@@ -3422,7 +3656,7 @@ Freeram:   40.781 MiB </code></pre>
 <h2 class="anchored" data-anchor-id="q3.-ingest-and-filter-chartevents.csv.gz">Q3. Ingest and filter <code>chartevents.csv.gz</code></h2>
 <p><a href="https://mimic.mit.edu/docs/iv/modules/icu/chartevents/"><code>chartevents.csv.gz</code></a> contains all the charted data available for a patient. During their ICU stay, the primary repository of a patient’s information is their electronic chart. The <code>itemid</code> variable indicates a single measurement type in the database. The <code>value</code> variable is the value measured for <code>itemid</code>. The first 10 lines of <code>chartevents.csv.gz</code> are</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/icu/chartevents.csv.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/icu/chartevents.csv.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>subject_id,hadm_id,stay_id,caregiver_id,charttime,storetime,itemid,value,valuenum,valueuom,warning
 10000032,29079034,39553978,18704,2180-07-23 12:36:00,2180-07-23 14:45:00,226512,39.4,39.4,kg,0
@@ -3438,11 +3672,11 @@ Freeram:   40.781 MiB </code></pre>
 </div>
 <p>How many rows? 433 millions.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/icu/chartevents.csv.gz <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb66"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/icu/chartevents.csv.gz <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p><a href="https://mimic.mit.edu/docs/iv/modules/icu/d_items/"><code>d_items.csv.gz</code></a> is the dictionary for the <code>itemid</code> in <code>chartevents.csv.gz</code>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/icu/d_items.csv.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/icu/d_items.csv.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>itemid,label,abbreviation,linksto,category,unitname,param_type,lownormalvalue,highnormalvalue
 220001,Problem List,Problem List,chartevents,General,,Text,,

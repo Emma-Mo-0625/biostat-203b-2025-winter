@@ -54,11 +54,92 @@ ls -l ~/mimic/icu/
 
 There are quite a few utilities in R for reading plain text data files. Let us test the speed of reading a moderate sized compressed csv file, `admissions.csv.gz`, by three functions: `read.csv` in base R, `read_csv` in tidyverse, and `fread` in the data.table package.
 
+```{r}
+admissions <- "~/mimic/hosp/admissions.csv.gz"
+
+library(tidyverse)
+library(data.table)
+library(pryr)
+```
+
+```{r}
+# Measure speed and memory usage for read.csv (Base R)
+system.time(df_base <- read.csv(admissions))
+memory_base <- object_size(df_base)
+str(df_base)
+memory_base
+```
+
+- speed: 5.676s
+- memory: 200.1 MB
+- data type: int and chr (string)
+
+```{r}
+# Measure speed and memory usage for read_csv (tidyverse)
+system.time(df_tidy <- read_csv(admissions))
+memory_tidy <- object_size(df_tidy)
+str(df_tidy)
+memory_tidy
+```
+
+- speed: 1.432s
+- memory: 70.02 MB
+- data type: num, chr (string), POSIXct (datetime)
+
+```{r}
+# Measure speed and memory usage for fread (data.table)
+system.time(df_dt <- fread(admissions))
+memory_dt <- object_size(df_dt)
+str(df_dt)
+memory_dt
+```
+
+- speed: 0.979s
+- memory: 63.47 MB
+- data type: int, chr (string), POSIXct (datetime)
+
 Which function is fastest? Is there difference in the (default) parsed data types? How much memory does each resultant dataframe or tibble use? (Hint: `system.time` measures run times; `pryr::object_size` measures memory usage; all these readers can take gz file as input without explicit decompression.) 
+
+- `fread` in the data.table package is the fastest and uses the least memory.
+- `read.csv` in base R is the slowest and uses the largest memory.
+- Base R (read.csv) treats all dates (admittime, dischtime, etc.) as characters (chr), requiring manual conversion to datetime. Tidyverse (read_csv) and data.table (fread) automatically parse them as POSIXct (datetime), making them immediately usable for date calculations.
+
 
 ### Q1.2 User-supplied data types
 
 Re-ingest `admissions.csv.gz` by indicating appropriate column data types in `read_csv`. Does the run time change? How much memory does the result tibble use? (Hint: `col_types` argument in `read_csv`.)
+
+```{r}
+col_types_spec <- cols(
+  subject_id = col_integer(),
+  hadm_id = col_integer(),
+  admittime = col_datetime(format = ""),
+  dischtime = col_datetime(format = ""),
+  deathtime = col_datetime(format = ""),
+  admission_type = col_character(),
+  admit_provider_id = col_character(),
+  admission_location = col_character(),
+  discharge_location = col_character(),
+  insurance = col_character(),
+  language = col_character(),
+  marital_status = col_character(),
+  race = col_character(),
+  edregtime = col_datetime(format = ""),
+  edouttime = col_datetime(format = ""),
+  hospital_expire_flag = col_integer()
+)
+
+system.time(df_tidy_optimized <- read_csv(admissions, col_types = col_types_spec))
+memory_tidy_optimized <- object_size(df_tidy_optimized)
+str(df_tidy_optimized)
+
+memory_tidy_optimized
+
+```
+
+- New run time: 1.241s
+- New memory: 63.47 MB
+- The run time is slightly faster (1.241s < 1.432s) and the memory usage also decreased slightly (63.47 MB < 70.02 MB).
 
 ## Q2. Ingest big data files
 
