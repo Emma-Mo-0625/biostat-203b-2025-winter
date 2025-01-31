@@ -284,7 +284,43 @@ Write a few sentences to explain what is Apache Arrow. Imagine you want to expla
 
 Re-write the csv file `labevents.csv` in the binary Parquet format (Hint: [`arrow::write_dataset`](https://arrow.apache.org/docs/r/reference/write_dataset.html).) How large is the Parquet file(s)? How long does the ingest+select+filter process of the Parquet file(s) take? Display the number of rows and the first 10 rows of the result tibble and make sure they match those in Q2.3. (Hint: use `dplyr` verbs for selecting columns and filtering rows.)
 
+```{r}
+csv_path <- "labevents.csv"
+parquet_path <- "labevents.parquet"
+dataset <- open_dataset(csv_path, format = "csv")
+write_dataset(dataset, parquet_path, format = "parquet")
+```
+
+```{r}
+file.info(parquet_path)$size
+```
+
+Size: 96B
+
+```{r}
+parquet_data <- open_dataset(parquet_path, format = "parquet")
+
+system.time({
+  df_parquet_filtered <- parquet_data %>%
+    select(subject_id, itemid, charttime, valuenum) %>%
+    filter(itemid %in% c(50912, 50971, 50983, 50902, 50882, 51221, 51301, 50931)) %>%
+    collect()
+})
+```
+
+It takes 5.212s to ingest+select+filter.
+
+```{r}
+nrow(df_parquet_filtered)
+head(df_parquet_filtered, 10)
+```
+
+Number of rows: 32679896
+
 Write a few sentences to explain what is the Parquet format. Imagine you want to explain it to a layman in an elevator.
+
+- Parquet arranges data in columns so it can find and retrieve information much faster. 
+- It's also highly compressed, saving space while keeping things efficient.
 
 ### Q2.6 DuckDB
 
