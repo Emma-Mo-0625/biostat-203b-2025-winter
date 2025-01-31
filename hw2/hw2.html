@@ -3284,7 +3284,7 @@ Attaching package: &#39;R.utils&#39;</code></pre>
 <div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>memuse<span class="sc">::</span><span class="fu">Sys.meminfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Totalram:  16.000 GiB 
-Freeram:   75.684 MiB </code></pre>
+Freeram:    1.846 GiB </code></pre>
 </div>
 </div>
 <p>In this exercise, we explore various tools for ingesting the <a href="https://physionet.org/content/mimiciv/3.1/">MIMIC-IV</a> data introduced in <a href="https://ucla-biostat-203b.github.io/2025winter/hw/hw1/hw1.html">homework 1</a>.</p>
@@ -3350,7 +3350,7 @@ Freeram:   75.684 MiB </code></pre>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(df_base <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(admissions))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 10.884   0.232  11.204 </code></pre>
+ 10.818   0.212  11.156 </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>memory_base <span class="ot">&lt;-</span> <span class="fu">object_size</span>(df_base)</span>
 <span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(df_base)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3399,7 +3399,7 @@ dttm (5): admittime, dischtime, deathtime, edregtime, edouttime
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  3.216   1.818   1.639 </code></pre>
+  3.251   1.391   1.433 </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>memory_tidy <span class="ot">&lt;-</span> <span class="fu">object_size</span>(df_tidy)</span>
 <span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(df_tidy)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3457,7 +3457,7 @@ dttm (5): admittime, dischtime, deathtime, edregtime, edouttime
 <span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(df_dt <span class="ot">&lt;-</span> <span class="fu">fread</span>(admissions))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  1.619   0.317   0.907 </code></pre>
+  1.610   0.331   0.941 </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>memory_dt <span class="ot">&lt;-</span> <span class="fu">object_size</span>(df_dt)</span>
 <span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(df_dt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3524,7 +3524,7 @@ dttm (5): admittime, dischtime, deathtime, edregtime, edouttime
 <span id="cb54-20"><a href="#cb54-20" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(df_tidy_optimized <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(admissions, <span class="at">col_types =</span> col_types_spec))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  2.939   1.689   1.329 </code></pre>
+  3.089   1.484   1.406 </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>memory_tidy_optimized <span class="ot">&lt;-</span> <span class="fu">object_size</span>(df_tidy_optimized)</span>
 <span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(df_tidy_optimized)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3664,15 +3664,15 @@ dttm (5): admittime, dischtime, deathtime, edregtime, edouttime
 <div class="cell">
 <div class="sourceCode cell-code" id="cb69"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> labevents_filtered.csv.gz <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>zcat: (stdin): unexpected end of file
- 22020147</code></pre>
+<pre><code> 32679896</code></pre>
 </div>
 </div>
+<p>Number of lines: 32679896</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>filtered <span class="ot">&lt;-</span> <span class="st">&quot;labevents_filtered.csv.gz&quot;</span></span>
 <span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(df_filtered <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(filtered))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Rows: 22020165 Columns: 4
+<pre><code>Rows: 32679896 Columns: 4
 ── Column specification ────────────────────────────────────────────────────────
 Delimiter: &quot;,&quot;
 dbl  (3): subject_id, itemid, valuenum
@@ -3683,9 +3683,10 @@ dttm (1): charttime
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 32.470  12.923  10.833 </code></pre>
+ 47.840  23.024  14.190 </code></pre>
 </div>
 </div>
+<p>It takes 20.356s to ingest.</p>
 </section>
 <section id="q2.4-ingest-labevents.csv-by-apache-arrow" class="level3">
 <h3 class="anchored" data-anchor-id="q2.4-ingest-labevents.csv-by-apache-arrow">Q2.4 Ingest <code>labevents.csv</code> by Apache Arrow</h3>
@@ -3718,7 +3719,7 @@ dttm (1): charttime
 <span id="cb76-6"><a href="#cb76-6" aria-hidden="true" tabindex="-1"></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 43.624   7.986  39.381 </code></pre>
+ 44.343   7.953  41.732 </code></pre>
 </div>
 </div>
 <p>It takes 41.013s to ingest+select+filter.</p>

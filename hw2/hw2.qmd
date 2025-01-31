@@ -202,7 +202,6 @@ zcat < ~/mimic/hosp/labevents.csv.gz | awk -F, '
     $5 == 50912 || $5 == 50971 || $5 == 50983 || $5 == 50902 || 
     $5 == 50882 || $5 == 51221 || $5 == 51301 || $5 == 50931
  ' | cut -d, -f2,5,7,10 | gzip > labevents_filtered.csv.gz
-
 ```
 
 Display the first 10 lines of the new file `labevents_filtered.csv.gz`. How many lines are in this new file, excluding the header? How long does it take `read_csv` to ingest `labevents_filtered.csv.gz`?
@@ -215,10 +214,14 @@ zcat < labevents_filtered.csv.gz | tail -n +2 | head -10
 zcat < labevents_filtered.csv.gz | tail -n +2 | wc -l
 ```
 
+Number of lines: 32679896
+
 ```{r}
 filtered <- "labevents_filtered.csv.gz"
 system.time(df_filtered <- read_csv(filtered))
 ```
+
+It takes 20.356s to ingest.
 
 ### Q2.4 Ingest `labevents.csv` by Apache Arrow
 
