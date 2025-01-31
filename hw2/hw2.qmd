@@ -208,7 +208,6 @@ zcat < ~/mimic/hosp/labevents.csv.gz | awk -F, '
 Display the first 10 lines of the new file `labevents_filtered.csv.gz`. How many lines are in this new file, excluding the header? How long does it take `read_csv` to ingest `labevents_filtered.csv.gz`?
 
 ```{bash}
-#| eval: false
 zcat < labevents_filtered.csv.gz | tail -n +2 | head -10
 ```
 
@@ -229,9 +228,50 @@ system.time(df_filtered <- read_csv(filtered))
 
 Our second strategy is to use [Apache Arrow](https://arrow.apache.org/) for larger-than-memory data analytics. Unfortunately Arrow does not work with gz files directly. First decompress `labevents.csv.gz` to `labevents.csv` and put it in the current working directory (do not add it in git!). To save render time, put `#| eval: false` at the beginning of this code chunk. TA will change it to `#| eval: true` when rendering your qmd file.
 
+```{bash}
+#| eval: false
+gunzip -c ~/mimic/hosp/labevents.csv.gz > labevents.csv
+```
+
 Then use [`arrow::open_dataset`](https://arrow.apache.org/docs/r/reference/open_dataset.html) to ingest `labevents.csv`, select columns, and filter `itemid` as in Q2.3. How long does the ingest+select+filter process take? Display the number of rows and the first 10 rows of the result tibble, and make sure they match those in Q2.3. (Hint: use `dplyr` verbs for selecting columns and filtering rows.)
 
+```{r}
+library(arrow)
+library(dplyr)
+
+lab <- "labevents.csv"
+dataset <- open_dataset(lab, format = "csv")
+
+filtered_data <- dataset %>%
+  select(subject_id, itemid, charttime, valuenum) %>%
+  filter(itemid %in% c(50912, 50971, 50983, 50902, 50882, 51221, 51301, 50931))
+df_filtered <- collect(filtered_data)
+```
+
+
+```{r}
+system.time({
+  df_filtered <- dataset %>%
+    select(subject_id, itemid, charttime, valuenum) %>%
+    filter(itemid %in% c(50912, 50971, 50983, 50902, 50882, 51221, 51301, 50931)) %>%
+    collect()
+})
+```
+
+It takes 41.013s to ingest+select+filter.
+
+```{r}
+nrow(df_filtered)
+head(df_filtered, 10)
+```
+
+Number of rows: 32679896
+
 Write a few sentences to explain what is Apache Arrow. Imagine you want to explain it to a layman in an elevator. 
+
+- Apache Arrow can access, process, and move large datasets much faster.
+- This is useful for big data, real-time analytics, and machine learning, etc.
+- Arrow can also read, write, and process data across different programming languages.
 
 ### Q2.5 Compress `labevents.csv` to Parquet format and ingest/select/filter
 
