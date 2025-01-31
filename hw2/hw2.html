@@ -3284,7 +3284,7 @@ Attaching package: &#39;R.utils&#39;</code></pre>
 <div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>memuse<span class="sc">::</span><span class="fu">Sys.meminfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Totalram:  16.000 GiB 
-Freeram:   39.086 MiB </code></pre>
+Freeram:    2.980 GiB </code></pre>
 </div>
 </div>
 <p>In this exercise, we explore various tools for ingesting the <a href="https://physionet.org/content/mimiciv/3.1/">MIMIC-IV</a> data introduced in <a href="https://ucla-biostat-203b.github.io/2025winter/hw/hw1/hw1.html">homework 1</a>.</p>
@@ -3350,7 +3350,7 @@ Freeram:   39.086 MiB </code></pre>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(df_base <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(admissions))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 10.946   0.232  11.235 </code></pre>
+ 10.711   0.206  10.964 </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>memory_base <span class="ot">&lt;-</span> <span class="fu">object_size</span>(df_base)</span>
 <span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(df_base)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3399,7 +3399,7 @@ dttm (5): admittime, dischtime, deathtime, edregtime, edouttime
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  3.493   1.783   1.807 </code></pre>
+  3.125   2.256   2.263 </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>memory_tidy <span class="ot">&lt;-</span> <span class="fu">object_size</span>(df_tidy)</span>
 <span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(df_tidy)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3457,7 +3457,7 @@ dttm (5): admittime, dischtime, deathtime, edregtime, edouttime
 <span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(df_dt <span class="ot">&lt;-</span> <span class="fu">fread</span>(admissions))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  1.700   0.389   1.173 </code></pre>
+  1.939   1.111   1.882 </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>memory_dt <span class="ot">&lt;-</span> <span class="fu">object_size</span>(df_dt)</span>
 <span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(df_dt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3524,7 +3524,7 @@ dttm (5): admittime, dischtime, deathtime, edregtime, edouttime
 <span id="cb54-20"><a href="#cb54-20" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(df_tidy_optimized <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(admissions, <span class="at">col_types =</span> col_types_spec))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  2.889   1.663   1.410 </code></pre>
+  2.943   2.294   2.077 </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>memory_tidy_optimized <span class="ot">&lt;-</span> <span class="fu">object_size</span>(df_tidy_optimized)</span>
 <span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(df_tidy_optimized)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3683,7 +3683,7 @@ dttm (1): charttime
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 48.546  25.001  16.888 </code></pre>
+ 48.303  36.959  25.760 </code></pre>
 </div>
 </div>
 <p>It takes 20.356s to ingest.</p>
@@ -3719,7 +3719,7 @@ dttm (1): charttime
 <span id="cb76-6"><a href="#cb76-6" aria-hidden="true" tabindex="-1"></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 46.574   7.827  41.719 </code></pre>
+ 42.649   6.779  37.894 </code></pre>
 </div>
 </div>
 <p>It takes 41.013s to ingest+select+filter.</p>
@@ -3783,7 +3783,7 @@ dttm (1): charttime
 <span id="cb85-8"><a href="#cb85-8" aria-hidden="true" tabindex="-1"></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 23.532   9.950  16.325 </code></pre>
+ 18.187   4.345   4.064 </code></pre>
 </div>
 </div>
 <p>It takes 5.212s to ingest+select+filter.</p>
@@ -3822,6 +3822,55 @@ dttm (1): charttime
 <img role="img" src="./duckdb_logo.png" width="20%">
 </p>
 <p>Ingest the Parquet file, convert it to a DuckDB table by <a href="https://arrow.apache.org/docs/r/reference/to_duckdb.html"><code>arrow::to_duckdb</code></a>, select columns, and filter rows as in Q2.5. How long does the ingest+convert+select+filter process take? Display the number of rows and the first 10 rows of the result tibble and make sure they match those in Q2.3. (Hint: use <code>dplyr</code> verbs for selecting columns and filtering rows.)</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(duckdb<span class="sc">::</span><span class="fu">duckdb</span>())</span>
+<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a>duckdb_table <span class="ot">&lt;-</span> arrow<span class="sc">::</span><span class="fu">to_duckdb</span>(parquet_data, con, <span class="st">&quot;labevents&quot;</span>)</span>
+<span id="cb91-3"><a href="#cb91-3" aria-hidden="true" tabindex="-1"></a>duckdb_table</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># Source:   table&lt;labevents&gt; [?? x 16]
+# Database: DuckDB v1.1.3 [root@Darwin 21.5.0:R 4.4.1/:memory:]
+   labevent_id subject_id hadm_id specimen_id itemid order_provider_id
+         &lt;dbl&gt;      &lt;dbl&gt;   &lt;dbl&gt;       &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;            
+ 1           1   10000032      NA     2704548  50931 P69FQC           
+ 2           2   10000032      NA    36092842  51071 P69FQC           
+ 3           3   10000032      NA    36092842  51074 P69FQC           
+ 4           4   10000032      NA    36092842  51075 P69FQC           
+ 5           5   10000032      NA    36092842  51079 P69FQC           
+ 6           6   10000032      NA    36092842  51087 P69FQC           
+ 7           7   10000032      NA    36092842  51089 P69FQC           
+ 8           8   10000032      NA    36092842  51090 P69FQC           
+ 9           9   10000032      NA    36092842  51092 P69FQC           
+10          10   10000032      NA    83925500  50853 P69FQC           
+# ℹ more rows
+# ℹ 10 more variables: charttime &lt;dttm&gt;, storetime &lt;dttm&gt;, value &lt;chr&gt;,
+#   valuenum &lt;dbl&gt;, valueuom &lt;chr&gt;, ref_range_lower &lt;dbl&gt;,
+#   ref_range_upper &lt;dbl&gt;, flag &lt;chr&gt;, priority &lt;chr&gt;, comments &lt;chr&gt;</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb93"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>filtered_data <span class="ot">&lt;-</span> duckdb_table <span class="sc">%&gt;%</span></span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(subject_id, itemid, charttime, valuenum) <span class="sc">%&gt;%</span></span>
+<span id="cb93-3"><a href="#cb93-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(itemid <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">50912</span>, <span class="dv">50971</span>, <span class="dv">50983</span>, <span class="dv">50902</span>, <span class="dv">50882</span>, <span class="dv">51221</span>, <span class="dv">51301</span>, <span class="dv">50931</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb94"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(filtered_data, <span class="dv">10</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># Source:   SQL [10 x 4]
+# Database: DuckDB v1.1.3 [root@Darwin 21.5.0:R 4.4.1/:memory:]
+   subject_id itemid charttime           valuenum
+        &lt;dbl&gt;  &lt;dbl&gt; &lt;dttm&gt;                 &lt;dbl&gt;
+ 1   10000032  50931 2180-03-23 11:51:00     95  
+ 2   10000032  50882 2180-03-23 11:51:00     27  
+ 3   10000032  50902 2180-03-23 11:51:00    101  
+ 4   10000032  50912 2180-03-23 11:51:00      0.4
+ 5   10000032  50971 2180-03-23 11:51:00      3.7
+ 6   10000032  50983 2180-03-23 11:51:00    136  
+ 7   10000032  51221 2180-03-23 11:51:00     45.4
+ 8   10000032  51301 2180-03-23 11:51:00      3  
+ 9   10000032  51221 2180-05-06 22:25:00     42.6
+10   10000032  51301 2180-05-06 22:25:00      5  </code></pre>
+</div>
+</div>
 <p>Write a few sentences to explain what is DuckDB. Imagine you want to explain it to a layman in an elevator.</p>
 </section>
 </section>
@@ -3829,7 +3878,7 @@ dttm (1): charttime
 <h2 class="anchored" data-anchor-id="q3.-ingest-and-filter-chartevents.csv.gz">Q3. Ingest and filter <code>chartevents.csv.gz</code></h2>
 <p><a href="https://mimic.mit.edu/docs/iv/modules/icu/chartevents/"><code>chartevents.csv.gz</code></a> contains all the charted data available for a patient. During their ICU stay, the primary repository of a patient’s information is their electronic chart. The <code>itemid</code> variable indicates a single measurement type in the database. The <code>value</code> variable is the value measured for <code>itemid</code>. The first 10 lines of <code>chartevents.csv.gz</code> are</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb91"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/icu/chartevents.csv.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb96"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/icu/chartevents.csv.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>subject_id,hadm_id,stay_id,caregiver_id,charttime,storetime,itemid,value,valuenum,valueuom,warning
 10000032,29079034,39553978,18704,2180-07-23 12:36:00,2180-07-23 14:45:00,226512,39.4,39.4,kg,0
@@ -3845,11 +3894,11 @@ dttm (1): charttime
 </div>
 <p>How many rows? 433 millions.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb93"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/icu/chartevents.csv.gz <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb98"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/icu/chartevents.csv.gz <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2 <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p><a href="https://mimic.mit.edu/docs/iv/modules/icu/d_items/"><code>d_items.csv.gz</code></a> is the dictionary for the <code>itemid</code> in <code>chartevents.csv.gz</code>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb94"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/icu/d_items.csv.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb99"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> <span class="op">&lt;</span> ~/mimic/icu/d_items.csv.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>itemid,label,abbreviation,linksto,category,unitname,param_type,lownormalvalue,highnormalvalue
 220001,Problem List,Problem List,chartevents,General,,Text,,
