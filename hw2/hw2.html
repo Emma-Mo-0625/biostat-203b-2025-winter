@@ -3284,7 +3284,7 @@ Attaching package: &#39;R.utils&#39;</code></pre>
 <div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>memuse<span class="sc">::</span><span class="fu">Sys.meminfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Totalram:  16.000 GiB 
-Freeram:    1.552 GiB </code></pre>
+Freeram:   86.488 MiB </code></pre>
 </div>
 </div>
 <p>In this exercise, we explore various tools for ingesting the <a href="https://physionet.org/content/mimiciv/3.1/">MIMIC-IV</a> data introduced in <a href="https://ucla-biostat-203b.github.io/2025winter/hw/hw1/hw1.html">homework 1</a>.</p>
@@ -3324,6 +3324,7 @@ Freeram:    1.552 GiB </code></pre>
 <pre><code>total 8506784
 -rw-r--r--  1 emma  staff       41566 Apr 13  2024 caregiver.csv.gz
 -rw-r--r--  1 emma  staff  3502392765 Apr 13  2024 chartevents.csv.gz
+drwxr-xr-x  3 emma  staff          96 Feb  1 12:31 csv_file
 -rw-r--r--  1 emma  staff       58741 Apr 13  2024 d_items.csv.gz
 -rw-r--r--  1 emma  staff    63481196 Apr 13  2024 datetimeevents.csv.gz
 -rw-r--r--  1 emma  staff     3342355 Oct  3 22:36 icustays.csv.gz
@@ -3350,7 +3351,7 @@ Freeram:    1.552 GiB </code></pre>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(df_base <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(admissions))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 10.523   0.204  10.832 </code></pre>
+ 10.364   0.219  10.674 </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>memory_base <span class="ot">&lt;-</span> <span class="fu">object_size</span>(df_base)</span>
 <span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(df_base)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3399,7 +3400,7 @@ dttm (5): admittime, dischtime, deathtime, edregtime, edouttime
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  3.062   2.236   1.991 </code></pre>
+  3.217   1.480   1.517 </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>memory_tidy <span class="ot">&lt;-</span> <span class="fu">object_size</span>(df_tidy)</span>
 <span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(df_tidy)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3457,7 +3458,7 @@ dttm (5): admittime, dischtime, deathtime, edregtime, edouttime
 <span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(df_dt <span class="ot">&lt;-</span> <span class="fu">fread</span>(admissions))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  1.772   0.942   1.567 </code></pre>
+  1.678   0.341   0.953 </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>memory_dt <span class="ot">&lt;-</span> <span class="fu">object_size</span>(df_dt)</span>
 <span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(df_dt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3524,7 +3525,7 @@ dttm (5): admittime, dischtime, deathtime, edregtime, edouttime
 <span id="cb54-20"><a href="#cb54-20" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(df_tidy_optimized <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(admissions, <span class="at">col_types =</span> col_types_spec))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  2.836   2.231   1.856 </code></pre>
+  2.996   1.554   1.357 </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>memory_tidy_optimized <span class="ot">&lt;-</span> <span class="fu">object_size</span>(df_tidy_optimized)</span>
 <span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(df_tidy_optimized)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -3683,7 +3684,7 @@ dttm (1): charttime
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 47.050  38.189  28.759 </code></pre>
+ 51.328  25.013  15.452 </code></pre>
 </div>
 </div>
 <p>It takes 20.356s to ingest.</p>
@@ -3719,7 +3720,7 @@ dttm (1): charttime
 <span id="cb76-6"><a href="#cb76-6" aria-hidden="true" tabindex="-1"></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 43.672   7.275  38.811 </code></pre>
+ 50.930   9.198  46.379 </code></pre>
 </div>
 </div>
 <p>It takes 41.013s to ingest+select+filter.</p>
@@ -3783,7 +3784,7 @@ dttm (1): charttime
 <span id="cb85-8"><a href="#cb85-8" aria-hidden="true" tabindex="-1"></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 23.203   9.702   6.206 </code></pre>
+ 20.246   6.616   4.504 </code></pre>
 </div>
 </div>
 <p>It takes 5.212s to ingest+select+filter.</p>
@@ -3841,7 +3842,7 @@ dttm (1): charttime
 <span id="cb92-7"><a href="#cb92-7" aria-hidden="true" tabindex="-1"></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 27.389   6.834   7.027 </code></pre>
+ 24.353   5.291   4.853 </code></pre>
 </div>
 </div>
 <p>It takes 4.071s to ingest+convert+select+filter.</p>
@@ -3918,7 +3919,48 @@ dttm (1): charttime
 </div>
 </div>
 <p>In later exercises, we are interested in the vitals for ICU patients: heart rate (220045), mean non-invasive blood pressure (220181), systolic non-invasive blood pressure (220179), body temperature in Fahrenheit (223761), and respiratory rate (220210). Retrieve a subset of <code>chartevents.csv.gz</code> only containing these items, using the favorite method you learnt in Q2.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb103"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(arrow)</span>
+<span id="cb103-2"><a href="#cb103-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb103-3"><a href="#cb103-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb103-4"><a href="#cb103-4" aria-hidden="true" tabindex="-1"></a>csv_file <span class="ot">&lt;-</span> <span class="st">&quot;~/mimic/icu/chartevents.csv.gz&quot;</span></span>
+<span id="cb103-5"><a href="#cb103-5" aria-hidden="true" tabindex="-1"></a>parquet_file <span class="ot">&lt;-</span> <span class="st">&quot;~/mimic/icu/csv_file&quot;</span></span>
+<span id="cb103-6"><a href="#cb103-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb103-7"><a href="#cb103-7" aria-hidden="true" tabindex="-1"></a>dataset <span class="ot">&lt;-</span> <span class="fu">open_dataset</span>(csv_file, <span class="at">format =</span> <span class="st">&quot;csv&quot;</span>)</span>
+<span id="cb103-8"><a href="#cb103-8" aria-hidden="true" tabindex="-1"></a><span class="fu">write_dataset</span>(dataset, parquet_file, <span class="at">format =</span> <span class="st">&quot;parquet&quot;</span>)</span>
+<span id="cb103-9"><a href="#cb103-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb103-10"><a href="#cb103-10" aria-hidden="true" tabindex="-1"></a>parquet_data <span class="ot">&lt;-</span> <span class="fu">open_dataset</span>(parquet_file, <span class="at">format =</span> <span class="st">&quot;parquet&quot;</span>)</span>
+<span id="cb103-11"><a href="#cb103-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb103-12"><a href="#cb103-12" aria-hidden="true" tabindex="-1"></a>filtered_data <span class="ot">&lt;-</span> parquet_data <span class="sc">%&gt;%</span></span>
+<span id="cb103-13"><a href="#cb103-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(itemid <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">220045</span>, <span class="dv">220181</span>, <span class="dv">220179</span>, <span class="dv">223761</span>, <span class="dv">220210</span>))</span>
+<span id="cb103-14"><a href="#cb103-14" aria-hidden="true" tabindex="-1"></a>df_filtered <span class="ot">&lt;-</span> <span class="fu">collect</span>(filtered_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 <p>Document the steps and show code. Display the number of rows and the first 10 rows of the result tibble.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb104"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb104-1"><a href="#cb104-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(df_filtered)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 30195426</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb106"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(df_filtered, <span class="dv">10</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 10 × 11
+   subject_id  hadm_id  stay_id caregiver_id charttime          
+        &lt;int&gt;    &lt;int&gt;    &lt;int&gt;        &lt;int&gt; &lt;dttm&gt;             
+ 1   10000032 29079034 39553978        18704 2180-07-23 22:00:00
+ 2   10000032 29079034 39553978        18704 2180-07-23 22:11:00
+ 3   10000032 29079034 39553978        18704 2180-07-23 22:11:00
+ 4   10000032 29079034 39553978        18704 2180-07-23 22:12:00
+ 5   10000032 29079034 39553978        18704 2180-07-23 22:12:00
+ 6   10000032 29079034 39553978        18704 2180-07-23 22:30:00
+ 7   10000032 29079034 39553978        18704 2180-07-23 22:30:00
+ 8   10000032 29079034 39553978        18704 2180-07-23 22:30:00
+ 9   10000032 29079034 39553978        18704 2180-07-23 22:30:00
+10   10000032 29079034 39553978        18704 2180-07-23 23:00:00
+# ℹ 6 more variables: storetime &lt;dttm&gt;, itemid &lt;int&gt;, value &lt;chr&gt;,
+#   valuenum &lt;dbl&gt;, valueuom &lt;chr&gt;, warning &lt;int&gt;</code></pre>
+</div>
+</div>
+<p>Number of rows: 30195426</p>
 </section>
 
 </main>

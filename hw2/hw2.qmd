@@ -388,5 +388,28 @@ zcat < ~/mimic/icu/d_items.csv.gz | head -10
 ```
 In later exercises, we are interested in the vitals for ICU patients: heart rate (220045), mean non-invasive blood pressure (220181), systolic non-invasive blood pressure (220179), body temperature in Fahrenheit (223761), and respiratory rate (220210). Retrieve a subset of `chartevents.csv.gz` only containing these items, using the favorite method you learnt in Q2. 
 
+```{r}
+library(arrow)
+library(dplyr)
+
+csv_file <- "~/mimic/icu/chartevents.csv.gz"
+parquet_file <- "~/mimic/icu/csv_file"
+
+dataset <- open_dataset(csv_file, format = "csv")
+write_dataset(dataset, parquet_file, format = "parquet")
+
+parquet_data <- open_dataset(parquet_file, format = "parquet")
+
+filtered_data <- parquet_data %>%
+  filter(itemid %in% c(220045, 220181, 220179, 223761, 220210))
+df_filtered <- collect(filtered_data)
+```
+
 Document the steps and show code. Display the number of rows and the first 10 rows of the result tibble.
 
+```{r}
+nrow(df_filtered)
+head(df_filtered, 10)
+```
+
+Number of rows: 30195426
