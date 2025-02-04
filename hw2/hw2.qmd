@@ -247,8 +247,17 @@ dataset <- open_dataset(lab, format = "csv")
 
 filtered_data <- dataset %>%
   select(subject_id, itemid, charttime, valuenum) %>%
-  filter(itemid %in% c(50912, 50971, 50983, 50902, 50882, 51221, 51301, 50931))
-df_filtered <- collect(filtered_data)
+  filter(
+    itemid %in% c(
+      50912, 50971, 50983, 
+      50902, 50882, 51221, 
+      51301, 50931
+    )
+  ) %>%
+  collect()
+
+df_filtered <- filtered_data
+
 ```
 
 
@@ -256,9 +265,16 @@ df_filtered <- collect(filtered_data)
 system.time({
   df_filtered <- dataset %>%
     select(subject_id, itemid, charttime, valuenum) %>%
-    filter(itemid %in% c(50912, 50971, 50983, 50902, 50882, 51221, 51301, 50931)) %>%
+    filter(
+      itemid %in% c(
+        50912, 50971, 50983, 
+        50902, 50882, 51221, 
+        51301, 50931
+      )
+    ) %>%
     collect()
 })
+
 ```
 
 It takes 41.013s to ingest+select+filter.
@@ -303,9 +319,16 @@ parquet_data <- open_dataset(parquet_path, format = "parquet")
 system.time({
   df_parquet_filtered <- parquet_data %>%
     select(subject_id, itemid, charttime, valuenum) %>%
-    filter(itemid %in% c(50912, 50971, 50983, 50902, 50882, 51221, 51301, 50931)) %>%
+    filter(
+      itemid %in% c(
+        50912, 50971, 50983, 
+        50902, 50882, 51221, 
+        51301, 50931
+      )
+    ) %>%
     collect()
 })
+
 ```
 
 It takes 5.212s to ingest+select+filter.
