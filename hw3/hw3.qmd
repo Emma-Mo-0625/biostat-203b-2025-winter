@@ -507,6 +507,110 @@ We are interested in the lab measurements of creatinine (50912), potassium (5097
 
 Hint: Use the Parquet format you generated in Homework 2. For reproducibility, make `labevents_pq` folder available at the current working directory `hw3`, for example, by a symbolic link.
 
+```{r}
+library(DBI)
+library(duckdb)
+library(tidyverse)
+
+con <- dbConnect(duckdb(), dbdir = "mimic.duckdb", read_only = FALSE)
+
+dbExecute(con, "
+  CREATE OR REPLACE TABLE labevents AS 
+  SELECT * FROM parquet_scan('labevents_pq/*.parquet')
+")
+copy_to(con, icustays_tble, "icustays", overwrite = TRUE)
+```
+
+```{r}
+dbExecute(con, "
+  CREATE OR REPLACE TEMP TABLE labevents_filtered AS
+  SELECT subject_id, itemid, storetime, valuenum
+  FROM labevents
+  WHERE itemid IN (50912, 50971, 50983, 50902, 50882, 51221, 51301, 50931)
+")
+
+# join icustays, and only keep storetime < intime
+dbExecute(con, "
+  CREATE OR REPLACE TEMP TABLE labevents_icu AS
+  SELECT lf.subject_id,
+         i.stay_id,
+         lf.itemid,
+         lf.storetime,
+         lf.valuenum,
+         i.intime
+  FROM labevents_filtered lf
+  JOIN icustays i
+    ON lf.subject_id = i.subject_id
+  WHERE lf.storetime < i.intime
+")
+
+# group subject_id, stay_id, itemid, and keep the max storetime
+dbExecute(con, "
+  CREATE OR REPLACE TEMP TABLE labevents_last AS
+  WITH ranked AS (
+    SELECT subject_id,
+           stay_id,
+           itemid,
+           valuenum,
+           storetime,
+           ROW_NUMBER() OVER (
+             PARTITION BY subject_id, stay_id, itemid
+             ORDER BY storetime DESC
+           ) AS rn
+    FROM labevents_icu
+  )
+  SELECT subject_id, stay_id, itemid, valuenum
+  FROM ranked
+  WHERE rn = 1
+")
+```
+
+
+```{r}
+labevents_last_df <- dbGetQuery(con, "SELECT * FROM labevents_last")
+
+labevents_wide <- labevents_last_df %>%
+  pivot_wider(
+    id_cols = c("subject_id", "stay_id"),
+    names_from = "itemid",
+    values_from = "valuenum"
+  ) %>%
+  rename(
+    creatinine  = `50912`,
+    potassium   = `50971`,
+    sodium      = `50983`,
+    chloride    = `50902`,
+    bicarbonate = `50882`,
+    hematocrit  = `51221`,
+    wbc         = `51301`,
+    glucose     = `50931`
+  )
+
+labevents_tble <- icustays_tble %>%
+  left_join(labevents_wide, by = c("subject_id", "stay_id")) %>%
+  arrange(subject_id, stay_id)  # order by subject_id, stay_id
+```
+
+```{r}
+labevents_tble_minimal <- labevents_tble %>%
+  select(
+    subject_id,
+    stay_id,
+    bicarbonate,
+    chloride,
+    creatinine,
+    glucose,
+    potassium,
+    sodium,
+    hematocrit,
+    wbc
+  )
+
+print(labevents_tble_minimal)
+```
+
+
+
 ## Q6. Vitals from charted events
 
 `chartevents.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/icu/chartevents/>) contains all the charted data available for a patient. During their ICU stay, the primary repository of a patient’s information is their electronic chart. The `itemid` variable indicates a single measurement type in the database. The `value` variable is the value measured for `itemid`. The first 10 lines of `chartevents.csv.gz` are
