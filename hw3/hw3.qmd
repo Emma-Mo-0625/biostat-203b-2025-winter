@@ -163,8 +163,8 @@ ggplot() +
     title = paste0(
       "Patient ", subject_id, ", ", 
       patient_info$gender, ", ", 
-      patient_info$anchor_age, " years old",
-      patient_info$race
+      patient_info$anchor_age, " years old ",
+      admissions_info$race
     ),
     subtitle = paste("Top Diagnoses:\n", paste(top_diagnoses, collapse = "\n")),
     x = "Calendar Time",
