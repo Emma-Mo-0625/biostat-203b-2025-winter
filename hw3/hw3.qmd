@@ -446,9 +446,47 @@ zcat < ~/mimic/hosp/patients.csv.gz | head
 
 Import `patients.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/hosp/patients/>) as a tibble `patients_tble`.
 
+```{r}
+patients_tble <- read_csv("~/mimic/hosp/patients.csv.gz")
+```
+
 ### Q4.2 Summary and visualization
 
 Summarize variables `gender` and `anchor_age` by graphics, and explain any patterns you see.
+
+```{r}
+library(tidyverse)
+
+gender_count <- patients_tble %>%
+  group_by(gender) %>%
+  summarize(count = n(), .groups = "drop")
+
+ggplot(gender_count, aes(x = gender, y = count, fill = gender)) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Distribution of Gender",
+    x = "Gender",
+    y = "Count"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+Female is slightly more than male.
+
+```{r}
+ggplot(patients_tble, aes(x = anchor_age)) +
+  geom_histogram(binwidth = 5, fill = "steelblue", color = "white") +
+  labs(
+    title = "Distribution of Anchor Age",
+    x = "Anchor Age",
+    y = "Count"
+  ) +
+  theme_minimal()
+```
+
+- The majority of patients cluster around young adult ages (e.g., 20s–30s).
+- There is also a substantial number of middle-aged and older adults.
 
 ## Q5. Lab results
 
