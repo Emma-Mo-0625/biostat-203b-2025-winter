@@ -285,9 +285,46 @@ zcat < ~/mimic/icu/icustays.csv.gz | head
 
 Import `icustays.csv.gz` as a tibble `icustays_tble`. 
 
+```{r}
+icustays_tble <- read_csv("~/mimic/icu/icustays.csv.gz")
+```
+
 ### Q2.2 Summary and visualization
 
 How many unique `subject_id`? Can a `subject_id` have multiple ICU stays? Summarize the number of ICU stays per `subject_id` by graphs. 
+
+```{r}
+num_unique_subjects <- icustays_tble %>%
+  summarize(n_unique_subjects = n_distinct(subject_id)) %>%
+  pull(n_unique_subjects)
+num_unique_subjects
+```
+
+There are 65366 unique `subject_id`.
+
+```{r}
+subject_stays <- icustays_tble %>%
+  group_by(subject_id) %>%
+  summarize(n_stays = n(), .groups = "drop")
+subject_stays
+
+sum(subject_stays$n_stays > 1)
+```
+
+Yes, a `subject_id` can have multiple ICU stays.
+
+```{r}
+ggplot(subject_stays, aes(x = n_stays)) +
+  geom_bar() +
+  scale_x_continuous(breaks = 1:max(subject_stays$n_stays)) +
+  labs(
+    title = "Distribution of ICU stays per subject_id",
+    x = "Number of ICU stays",
+    y = "Count of subjects"
+  ) +
+  theme_minimal()
+```
+
 
 ## Q3. `admissions` data
 
