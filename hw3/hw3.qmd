@@ -125,7 +125,6 @@ diagnoses_info <- diagnoses %>%
   select(subject_id, hadm_id, icd_code, long_title)
 
 top_diagnoses <- diagnoses_info %>%
-  count(long_title, sort = TRUE) %>%
   slice_head(n = 3) %>%
   pull(long_title)
 ```
@@ -164,10 +163,11 @@ ggplot() +
     title = paste0(
       "Patient ", subject_id, ", ", 
       patient_info$gender, ", ", 
-      patient_info$anchor_age, " years old"
+      patient_info$anchor_age, " years old",
+      patient_info$race
     ),
-    subtitle = paste("Top Diagnoses:", paste(top_diagnoses, collapse = ", ")),
-    x = "Calendar Date",
+    subtitle = paste("Top Diagnoses:\n", paste(top_diagnoses, collapse = "\n")),
+    x = "Calendar Time",
     y = NULL,
     color = "Care Unit",
     shape = "Procedure",
@@ -175,8 +175,7 @@ ggplot() +
   ) +
   theme_minimal() +
   theme(legend.position = "bottom") +
-  scale_x_date(date_breaks = "1 week", date_labels = "%b %d")
-
+  scale_x_date(date_breaks = "2 weeks", date_labels = "%b %d")
 ```
 
 
@@ -187,6 +186,93 @@ ICU stays are a subset of ADT history. This figure shows the vitals of the patie
 ![](10001217_icu.png)
 
 Do a similar visualization for the patient `10063848`.
+
+```{r}
+csv_file <- "~/mimic/icu/chartevents.csv.gz"
+parquet_file <- "~/mimic/icu/csv_file"
+
+parquet_data <- open_dataset(parquet_file, format = "parquet")
+
+chartevents_data <- parquet_data %>%
+  filter(subject_id %in% c(10063848))
+chartevents <- collect(chartevents_data)
+```
+
+
+```{r}
+d_items     <- read_csv("~/mimic/icu/d_items.csv.gz")
+```
+
+
+```{r}
+chartevents_joined <- chartevents %>%
+  left_join(d_items, by = "itemid")
+
+subject_of_interest <- 10063848
+
+vitals <- chartevents_joined %>%
+  filter(
+    subject_id == subject_of_interest,
+    label %in% c("Heart Rate",
+                 "Non Invasive Blood Pressure systolic",
+                 "Non Invasive Blood Pressure diastolic",
+                 "Respiratory Rate",
+                 "Temperature Fahrenheit")
+  ) %>%
+  mutate(
+    charttime = ymd_hms(charttime)  # parse as POSIXct
+  )
+```
+
+```{r}
+icustays <- read_csv("~/mimic/icu/icustays.csv.gz") %>%
+  filter(subject_id == subject_of_interest) %>%
+  mutate(
+    intime  = ymd_hms(intime),
+    outtime = ymd_hms(outtime)
+  )
+```
+
+```{r}
+vitals_icu <- vitals %>%
+  inner_join(icustays, by = c("subject_id", "stay_id")) 
+```
+
+```{r}
+vitals_icu <- vitals_icu %>%
+  mutate(
+    vital_abbr = case_when(
+      label == "Heart Rate" ~ "HR",
+      label == "Non Invasive Blood Pressure systolic"  ~ "NBPs",
+      label == "Non Invasive Blood Pressure diastolic" ~ "NBPd",
+      label == "Respiratory Rate" ~ "RR",
+      label == "Temperature Fahrenheit" ~ "Temperature Fahrenheit",
+      TRUE ~ label
+    )
+  )
+```
+
+
+```{r}
+ggplot(vitals_icu, aes(x = charttime, y = valuenum, color = vital_abbr)) +
+  geom_line() +
+  geom_point() +
+  facet_grid(vital_abbr ~ stay_id, scales = "free_y") +
+  scale_x_datetime(date_breaks = "12 hours", date_labels = "%b %d %H:%M") +
+  labs(
+    title = paste("Patient", subject_of_interest, "ICU stays - Vitals"),
+    x = NULL,
+    y = NULL,  # or "Value"
+    color = "Vital"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    strip.text = element_text(size = 10)
+  )
+
+```
+
 
 ## Q2. ICU stays
 
