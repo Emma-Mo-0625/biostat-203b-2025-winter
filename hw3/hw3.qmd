@@ -337,6 +337,10 @@ zcat < ~/mimic/hosp/admissions.csv.gz | head
 
 Import `admissions.csv.gz` as a tibble `admissions_tble`.
 
+```{r}
+admissions_tble <- read_csv("~/mimic/hosp/admissions.csv.gz")
+```
+
 ### Q3.2 Summary and visualization
 
 Summarize the following information by graphics and explain any patterns you see.
@@ -347,6 +351,87 @@ Summarize the following information by graphics and explain any patterns you see
 - length of hospital stay (from admission to discharge) (anything unusual?)  
 
 According to the [MIMIC-IV documentation](https://mimic.mit.edu/docs/iv/about/concepts/#date-shifting), 
+
+```{r}
+library(tidyverse)
+library(lubridate)  # For working with dates/times
+
+adm_per_patient <- admissions_tble %>%
+  group_by(subject_id) %>%
+  summarize(n_admissions = n(), .groups = "drop")
+
+ggplot(adm_per_patient, aes(x = n_admissions)) +
+  geom_bar(fill = "steelblue") +
+  labs(
+    title = "Distribution of Number of Admissions per Patient",
+    x = "Number of Admissions",
+    y = "Count of Patients"
+  ) +
+  theme_minimal()
+```
+
+- Many patients typically have only 1 admission (common in hospital databases).
+- A long, thin tail extending out to higher numbers of admissions, meaning fewer patients have many admissions.
+
+```{r}
+admissions_tble <- admissions_tble %>%
+  mutate(admission_hour = hour(admittime))
+
+ggplot(admissions_tble, aes(x = admission_hour)) +
+  geom_bar(fill = "tomato") +
+  scale_x_continuous(breaks = 0:23) +
+  labs(
+    title = "Distribution of Admission Hour",
+    x = "Hour of Day (0-23)",
+    y = "Count of Admissions"
+  ) +
+  theme_minimal()
+
+```
+
+- A very high bar at hour = 0 (midnight).
+- Fewer admissions during the early morning hours (1–9 AM), with another spike at 7 AM.
+- A gradual rise and plateau from 10 AM through evening hours.
+
+```{r}
+# 1. Extract the minute of admission
+admissions_tble <- admissions_tble %>%
+  mutate(admission_minute = minute(admittime))
+
+# 2. Plot the distribution of admission_minute
+ggplot(admissions_tble, aes(x = admission_minute)) +
+  geom_bar(fill = "forestgreen") +
+  scale_x_continuous(breaks = seq(0, 59, by = 5)) +
+  labs(
+    title = "Distribution of Admission Minute",
+    x = "Minute (0-59)",
+    y = "Count of Admissions"
+  ) +
+  theme_minimal()
+```
+
+Every 15 minutes there is a spike. This is likely due to rounding of the admission time to the nearest 15 minutes.
+
+```{r}
+admissions_tble <- admissions_tble %>%
+  mutate(
+    length_of_stay_days = as.numeric(difftime(dischtime, admittime, units = "days"))
+  )
+
+ggplot(admissions_tble, aes(x = length_of_stay_days)) +
+  geom_histogram(bins = 50, fill = "purple", color = "white") +
+  labs(
+    title = "Distribution of Length of Hospital Stay",
+    x = "Length of Stay (days)",
+    y = "Count of Admissions"
+  ) +
+  theme_minimal()
+
+```
+
+- A large number of very short stays (near 0–2 days).
+- The distribution tapers off quickly but extends to very long stays (hundreds of days).
+- A classic right-skewed distribution: many short stays, fewer very long ones.
 
 > All dates in the database have been shifted to protect patient confidentiality. Dates will be internally consistent for the same patient, but randomly distributed in the future. Dates of birth which occur in the present time are not true dates of birth. Furthermore, dates of birth which occur before the year 1900 occur if the patient is older than 89. In these cases, the patient’s age at their first admission has been fixed to 300.
 
