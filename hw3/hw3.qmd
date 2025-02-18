@@ -721,11 +721,11 @@ chartevents_wide <- chartevents_first_df %>%
 
 chartevents_tble <- icustays_tble %>%
   left_join(chartevents_wide, by = c("subject_id", "stay_id")) %>%
-  arrange(subject_id, stay_id)  # sort for grading or clarity
+  arrange(subject_id, stay_id)
 ```
 
 ```{r}
-chartevents_tble <- chartevents_tble %>%
+chartevents_tble_minimal <- chartevents_tble %>%
   select(
     subject_id,
     stay_id,
@@ -736,8 +736,10 @@ chartevents_tble <- chartevents_tble %>%
     respiratory_rate
   )
 
-print(chartevents_tble)
+print(chartevents_tble_minimal)
+```
 
+```{r}
 rm(chartevents_first_df, chartevents_wide)
 dbDisconnect(con)
 ```
@@ -756,6 +758,28 @@ Let us create a tibble `mimic_icu_cohort` for all ICU stays, where rows are all 
 The final `mimic_icu_cohort` should have one row per ICU stay and columns for each variable.
 
 ![](mimic_icu_cohort.png)
+
+```{r}
+mimic_icu_cohort <- icustays_tble %>%
+  # 1) Join ICU stays with admissions
+  inner_join(admissions_tble, by = c("subject_id", "hadm_id")) %>%
+  
+  # 2) Join with patients
+  inner_join(patients_tble, by = "subject_id") %>%
+  
+  # 3) Filter to adult ICU stays (example using anchor_age >= 18 in MIMIC-IV)
+  filter(anchor_age >= 18) %>%
+  
+  # 4) Join the last lab measurements before ICU (one row per ICU stay)
+  left_join(labevents_tble, by = c("subject_id", "hadm_id", "stay_id")) %>%
+  
+  # 5) Join the first vitals during ICU (also one row per ICU stay)
+  left_join(chartevents_tble, by = c("subject_id", "hadm_id", "stay_id"))
+
+mimic_icu_cohort
+
+```
+
 
 ## Q8. Exploratory data analysis (EDA)
 
