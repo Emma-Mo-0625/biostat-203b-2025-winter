@@ -674,12 +674,13 @@ dbExecute(con, "
          i.stay_id,
          cf.itemid,
          cf.storetime,
-         cf.valuenum,
+         AVG(cf.valuenum) AS avg_valuenum,
          i.intime
   FROM chartevents_filtered cf
   JOIN icustays i
     ON cf.subject_id = i.subject_id
   WHERE cf.storetime >= i.intime
+  GROUP BY cf.subject_id, i.stay_id, cf.itemid, cf.storetime, i.intime;
 ")
 
 dbExecute(con, "
@@ -688,7 +689,7 @@ dbExecute(con, "
     SELECT subject_id,
            stay_id,
            itemid,
-           valuenum,
+           avg_valuenum,
            storetime,
            ROW_NUMBER() OVER (
              PARTITION BY subject_id, stay_id, itemid
@@ -696,7 +697,7 @@ dbExecute(con, "
            ) AS rn
     FROM chartevents_icu
   )
-  SELECT subject_id, stay_id, itemid, valuenum
+  SELECT subject_id, stay_id, itemid, avg_valuenum
   FROM ranked
   WHERE rn = 1
 ")
@@ -709,7 +710,7 @@ chartevents_wide <- chartevents_first_df %>%
   pivot_wider(
     id_cols = c("subject_id", "stay_id"),
     names_from = "itemid",
-    values_from = "valuenum"
+    values_from = "avg_valuenum"
   ) %>%
   rename(
     heart_rate                        = `220045`,
@@ -787,9 +788,157 @@ Summarize the following information about the ICU stay cohort `mimic_icu_cohort`
 
 - Length of ICU stay `los` vs demographic variables (race, insurance, marital_status, gender, age at intime)
 
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# By Race
+mimic_icu_cohort %>%
+  group_by(race) %>%
+  summarize(
+    n_stays = n(),
+    median_los = median(los, na.rm = TRUE),
+    iqr_los = IQR(los, na.rm = TRUE)
+  ) %>%
+  arrange(desc(median_los)) %>%
+  print(n = Inf)
+
+# By Insurance
+mimic_icu_cohort %>%
+  group_by(insurance) %>%
+  summarize(
+    n_stays = n(),
+    median_los = median(los, na.rm = TRUE),
+    iqr_los = IQR(los, na.rm = TRUE)
+  ) %>%
+  arrange(desc(median_los))
+
+# By Marital Status
+mimic_icu_cohort %>%
+  group_by(marital_status) %>%
+  summarize(
+    n_stays = n(),
+    mean_los = mean(los, na.rm = TRUE),
+    sd_los = sd(los, na.rm = TRUE)
+  )
+
+# By Gender
+mimic_icu_cohort %>%
+  group_by(gender) %>%
+  summarize(
+    n_stays = n(),
+    median_los = median(los, na.rm = TRUE)
+  )
+```
+
+```{r}
+# by age
+mimic_icu_cohort %>%
+  summarize(
+    correlation = cor(anchor_age, los, use = "complete.obs", method = "spearman")
+  )
+```
+
+```{r}
+# Boxplots of LOS by categorical demographic variable
+ggplot(mimic_icu_cohort, aes(x = race, y = los)) +
+  geom_boxplot() +
+  coord_flip() +  # Flip for easier reading if many race categories
+  labs(title = "LOS by Race",
+       x = "Race",
+       y = "ICU Length of Stay (days)")
+
+ggplot(mimic_icu_cohort, aes(x = insurance, y = los)) +
+  geom_boxplot() +
+  coord_flip() +
+  labs(title = "LOS by Insurance",
+       x = "Insurance Type",
+       y = "ICU Length of Stay (days)")
+```
+
+```{r}
+# Scatterplot of Age vs LOS
+ggplot(mimic_icu_cohort, aes(x = anchor_age, y = los)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "LOS vs Age",
+       x = "Age at ICU Admission",
+       y = "ICU Length of Stay (days)")
+
+```
+
+
 - Length of ICU stay `los` vs the last available lab measurements before ICU stay
+
+```{r}
+# correlation of each lab vs LOS
+labs_of_interest <- c("creatinine", "potassium", "sodium", 
+                      "chloride", "bicarbonate", "hematocrit", 
+                      "wbc", "glucose")
+
+mimic_icu_cohort %>%
+  select(los, all_of(labs_of_interest)) %>%
+  summarize(across(all_of(labs_of_interest), 
+                   ~ cor(.x, los, use = "complete.obs", method = "spearman")))
+```
+
 
 - Length of ICU stay `los` vs the first vital measurements within the ICU stay
 
+```{r}
+vitals_of_interest <- c("heart_rate", 
+                        "non_invasive_blood_pressure_systolic",
+                        "non_invasive_blood_pressure_diastolic",
+                        "temperature_fahrenheit",
+                        "respiratory_rate")
+
+mimic_icu_cohort %>%
+  select(los, all_of(vitals_of_interest)) %>%
+  summarize(across(all_of(vitals_of_interest), 
+                   ~ cor(.x, los, use = "complete.obs", method = "spearman")))
+```
+
+```{r}
+mimic_icu_cohort %>%
+  select(los, all_of(vitals_of_interest)) %>%
+  pivot_longer(
+    cols = all_of(vitals_of_interest),
+    names_to = "vital",
+    values_to = "value"
+  ) %>%
+  ggplot(aes(x = value, y = los)) +
+  geom_point(alpha = 0.3) +
+  facet_wrap(~ vital, scales = "free_x") +  # Each vital on its own panel
+  labs(
+    title = "LOS vs First Vitals in ICU",
+    x = "Vital measurement",
+    y = "ICU Length of Stay (days)"
+  ) +
+  theme_minimal()
+
+```
+
+
 - Length of ICU stay `los` vs first ICU unit
+
+```{r}
+mimic_icu_cohort %>%
+  group_by(first_careunit) %>%
+  summarize(
+    n_stays = n(),
+    median_los = median(los, na.rm = TRUE),
+    iqr_los = IQR(los, na.rm = TRUE)
+  ) %>%
+  arrange(desc(median_los))
+
+```
+
+```{r}
+ggplot(mimic_icu_cohort, aes(x = first_careunit, y = los)) +
+  geom_boxplot() +
+  coord_flip() +
+  labs(title = "LOS by First ICU Unit",
+       x = "First ICU Unit",
+       y = "ICU Length of Stay (days)")
+```
 
