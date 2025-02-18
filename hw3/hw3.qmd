@@ -629,6 +629,120 @@ We are interested in the vitals for ICU patients: heart rate (220045), systolic 
 
 Hint: Use the Parquet format you generated in Homework 2. For reproducibility, make `chartevents_pq` folder available at the current working directory, for example, by a symbolic link.
 
+**First generate chartevents_pq using Parquet**
+
+```{r}
+library(arrow)
+library(dplyr)
+
+# Path to your compressed CSV
+chartevents_csv <- "~/mimic/icu/chartevents.csv.gz"
+# A folder (not a single file) that will contain Parquet data
+chartevents_parquet <- "chartevents_pq"
+dataset <- open_dataset(chartevents_csv, format = "csv")
+write_dataset(dataset, chartevents_parquet, format = "parquet")
+```
+
+**Then use the Parquet data to generate the final table**
+
+```{r}
+library(DBI)
+library(duckdb)
+library(tidyverse)
+
+con <- dbConnect(duckdb(), dbdir = "mimic.duckdb", read_only = FALSE)
+
+dbExecute(con, "
+  CREATE OR REPLACE TABLE chartevents AS
+  SELECT * FROM parquet_scan('chartevents_pq/*.parquet')
+")
+
+copy_to(con, icustays_tble, "icustays", overwrite = TRUE)
+```
+
+```{r}
+dbExecute(con, "
+  CREATE OR REPLACE TEMP TABLE chartevents_filtered AS
+  SELECT subject_id, itemid, storetime, valuenum
+  FROM chartevents
+  WHERE itemid IN (220045, 220179, 220180, 223761, 220210)
+")
+
+dbExecute(con, "
+  CREATE OR REPLACE TEMP TABLE chartevents_icu AS
+  SELECT cf.subject_id,
+         i.stay_id,
+         cf.itemid,
+         cf.storetime,
+         cf.valuenum,
+         i.intime
+  FROM chartevents_filtered cf
+  JOIN icustays i
+    ON cf.subject_id = i.subject_id
+  WHERE cf.storetime >= i.intime
+")
+
+dbExecute(con, "
+  CREATE OR REPLACE TEMP TABLE chartevents_first AS
+  WITH ranked AS (
+    SELECT subject_id,
+           stay_id,
+           itemid,
+           valuenum,
+           storetime,
+           ROW_NUMBER() OVER (
+             PARTITION BY subject_id, stay_id, itemid
+             ORDER BY storetime ASC
+           ) AS rn
+    FROM chartevents_icu
+  )
+  SELECT subject_id, stay_id, itemid, valuenum
+  FROM ranked
+  WHERE rn = 1
+")
+```
+
+```{r}
+chartevents_first_df <- dbGetQuery(con, "SELECT * FROM chartevents_first")
+
+chartevents_wide <- chartevents_first_df %>%
+  pivot_wider(
+    id_cols = c("subject_id", "stay_id"),
+    names_from = "itemid",
+    values_from = "valuenum"
+  ) %>%
+  rename(
+    heart_rate                        = `220045`,
+    non_invasive_blood_pressure_systolic  = `220179`,
+    non_invasive_blood_pressure_diastolic = `220180`,
+    temperature_fahrenheit           = `223761`,
+    respiratory_rate                 = `220210`
+  )
+
+chartevents_tble <- icustays_tble %>%
+  left_join(chartevents_wide, by = c("subject_id", "stay_id")) %>%
+  arrange(subject_id, stay_id)  # sort for grading or clarity
+```
+
+```{r}
+chartevents_tble <- chartevents_tble %>%
+  select(
+    subject_id,
+    stay_id,
+    heart_rate,
+    non_invasive_blood_pressure_systolic,
+    non_invasive_blood_pressure_diastolic,
+    temperature_fahrenheit,
+    respiratory_rate
+  )
+
+print(chartevents_tble)
+
+rm(chartevents_first_df, chartevents_wide)
+dbDisconnect(con)
+```
+
+
 ## Q7. Putting things together
 
 Let us create a tibble `mimic_icu_cohort` for all ICU stays, where rows are all ICU stays of adults (age at `intime` >= 18) and columns contain at least following variables
