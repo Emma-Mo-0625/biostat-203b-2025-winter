@@ -110,6 +110,7 @@ Which function is fastest? Is there difference in the (default) parsed data type
 Re-ingest `admissions.csv.gz` by indicating appropriate column data types in `read_csv`. Does the run time change? How much memory does the result tibble use? (Hint: `col_types` argument in `read_csv`.)
 
 ```{r}
+#| eval: false
 col_types_spec <- cols(
   subject_id = col_integer(),
   hadm_id = col_integer(),
@@ -149,10 +150,12 @@ memory_tidy_optimized
 
 Let us focus on a bigger file, `labevents.csv.gz`, which is about 130x bigger than `admissions.csv.gz`.
 ```{bash}
+#| eval: false
 ls -l ~/mimic/hosp/labevents.csv.gz
 ```
 Display the first 10 lines of this file.
 ```{bash}
+#| eval: false
 zcat < ~/mimic/hosp/labevents.csv.gz | head -10
 ```
 
@@ -179,7 +182,8 @@ Try to ingest only columns `subject_id`, `itemid`, `charttime`, and `valuenum` i
 
 ```{r}
 # labevents <- "~/mimic/hosp/labevents.csv.gz"
-# df_labs_selected <- read_csv(labevents, col_select = c(subject_id, itemid, charttime, valuenum))
+# col_select = c(subject_id, itemid, charttime, valuenum)
+# df_labs_selected <- read_csv(labevents, col_select = col_select)
 # str(df_labs_selected)
 ```
 
@@ -207,16 +211,19 @@ zcat < ~/mimic/hosp/labevents.csv.gz | awk -F, '
 Display the first 10 lines of the new file `labevents_filtered.csv.gz`. How many lines are in this new file, excluding the header? How long does it take `read_csv` to ingest `labevents_filtered.csv.gz`?
 
 ```{bash}
+#| eval: false
 zcat < labevents_filtered.csv.gz | tail -n +2 | head -10
 ```
 
 ```{bash}
+#| eval: false
 zcat < labevents_filtered.csv.gz | tail -n +2 | wc -l
 ```
 
 Number of lines: 32679896
 
 ```{r}
+#| eval: false
 filtered <- "labevents_filtered.csv.gz"
 system.time(df_filtered <- read_csv(filtered))
 ```
@@ -239,6 +246,7 @@ gunzip -c ~/mimic/hosp/labevents.csv.gz > labevents.csv
 Then use [`arrow::open_dataset`](https://arrow.apache.org/docs/r/reference/open_dataset.html) to ingest `labevents.csv`, select columns, and filter `itemid` as in Q2.3. How long does the ingest+select+filter process take? Display the number of rows and the first 10 rows of the result tibble, and make sure they match those in Q2.3. (Hint: use `dplyr` verbs for selecting columns and filtering rows.)
 
 ```{r}
+#| eval: false
 library(arrow)
 library(dplyr)
 
@@ -262,6 +270,7 @@ df_filtered <- filtered_data
 
 
 ```{r}
+#| eval: false
 system.time({
   df_filtered <- dataset %>%
     select(subject_id, itemid, charttime, valuenum) %>%
@@ -280,6 +289,7 @@ system.time({
 It takes 41.013s to ingest+select+filter.
 
 ```{r}
+#| eval: false
 nrow(df_filtered)
 head(df_filtered, 10)
 ```
@@ -301,6 +311,7 @@ Write a few sentences to explain what is Apache Arrow. Imagine you want to expla
 Re-write the csv file `labevents.csv` in the binary Parquet format (Hint: [`arrow::write_dataset`](https://arrow.apache.org/docs/r/reference/write_dataset.html).) How large is the Parquet file(s)? How long does the ingest+select+filter process of the Parquet file(s) take? Display the number of rows and the first 10 rows of the result tibble and make sure they match those in Q2.3. (Hint: use `dplyr` verbs for selecting columns and filtering rows.)
 
 ```{r}
+#| eval: false
 csv_path <- "labevents.csv"
 parquet_path <- "labevents.parquet"
 dataset <- open_dataset(csv_path, format = "csv")
@@ -308,12 +319,14 @@ write_dataset(dataset, parquet_path, format = "parquet")
 ```
 
 ```{r}
+#| eval: false
 file.info(parquet_path)$size
 ```
 
 Size: 96B
 
 ```{r}
+#| eval: false
 parquet_data <- open_dataset(parquet_path, format = "parquet")
 
 system.time({
@@ -334,6 +347,7 @@ system.time({
 It takes 5.212s to ingest+select+filter.
 
 ```{r}
+#| eval: false
 nrow(df_parquet_filtered)
 head(df_parquet_filtered, 10)
 ```
@@ -354,6 +368,7 @@ Write a few sentences to explain what is the Parquet format. Imagine you want to
 Ingest the Parquet file, convert it to a DuckDB table by [`arrow::to_duckdb`](https://arrow.apache.org/docs/r/reference/to_duckdb.html), select columns, and filter rows as in Q2.5. How long does the ingest+convert+select+filter process take? Display the number of rows and the first 10 rows of the result tibble and make sure they match those in Q2.3. (Hint: use `dplyr` verbs for selecting columns and filtering rows.)
 
 ```{r}
+#| eval: false
 parquet_path <- "labevents.parquet"
 
 # Step 1: Open the Parquet file using Arrow
@@ -366,6 +381,7 @@ duckdb_table <- arrow::to_duckdb(dataset, table = "lab_duckdb")
 
 
 ```{r}
+#| eval: false
 system.time({
   filtered_data <- duckdb_table %>%
     select(subject_id, itemid, charttime, valuenum) %>%
@@ -378,12 +394,14 @@ system.time({
 It takes 4.071s to ingest+convert+select+filter.
 
 ```{r}
+#| eval: false
 nrow(df_duckdb_filtered)
 ```
 
 Number of rows: 32679896
 
 ```{r}
+#| eval: false
 head(filtered_data, 10)
 ```
 
@@ -398,6 +416,7 @@ Write a few sentences to explain what is DuckDB. Imagine you want to explain it 
 
 [`chartevents.csv.gz`](https://mimic.mit.edu/docs/iv/modules/icu/chartevents/) contains all the charted data available for a patient. During their ICU stay, the primary repository of a patient’s information is their electronic chart. The `itemid` variable indicates a single measurement type in the database. The `value` variable is the value measured for `itemid`. The first 10 lines of `chartevents.csv.gz` are
 ```{bash}
+#| eval: false
 zcat < ~/mimic/icu/chartevents.csv.gz | head -10
 ```
 How many rows? 433 millions.
@@ -407,11 +426,13 @@ zcat < ~/mimic/icu/chartevents.csv.gz | tail -n +2 | wc -l
 ```
 [`d_items.csv.gz`](https://mimic.mit.edu/docs/iv/modules/icu/d_items/) is the dictionary for the `itemid` in `chartevents.csv.gz`.
 ```{bash}
+#| eval: false
 zcat < ~/mimic/icu/d_items.csv.gz | head -10
 ```
 In later exercises, we are interested in the vitals for ICU patients: heart rate (220045), mean non-invasive blood pressure (220181), systolic non-invasive blood pressure (220179), body temperature in Fahrenheit (223761), and respiratory rate (220210). Retrieve a subset of `chartevents.csv.gz` only containing these items, using the favorite method you learnt in Q2. 
 
 ```{r}
+#| eval: false
 library(arrow)
 library(dplyr)
 
@@ -431,8 +452,33 @@ df_filtered <- collect(filtered_data)
 Document the steps and show code. Display the number of rows and the first 10 rows of the result tibble.
 
 ```{r}
+#| eval: false
 nrow(df_filtered)
 head(df_filtered, 10)
 ```
 
 Number of rows: 30195426
+
+## Conclusion
+
+- `read.csv` (base R) vs `read_csv` (tidyverse) vs `fread` (data.table)
+  - `read.csv` (base R): easy to use, but is the slowest and uses the most memory
+  - `read_csv` (tidyverse): faster than `read.csv`, read csv efficiently, understand column type & optimize memory usage and analysis, but still slow and uses more memory
+    - When reading filtered data, still load all columns and just keep the filtered data, so still inefficient.
+  - `fread`(data.table): the fastest and uses the least memory
+
+- Apache Arrow: 
+  - in-memory **columnar** data format (store data in columns)
+  - optimize CPU for vectorized operations
+  - zero-copy reads, and writes, and cross-language support
+- Parquet: 
+  - highly **compressed** data format that can reduce memory usage and is efficient for analytics
+  - columnar storage
+  - When reading filtered data, only load filtered columns, which can save time and memory
+- DuckDB: embedded SQL database that can store and retrieve data quickly
+  - can read Parquet files and is compatible with Arrow, so can be used for analytics directly
+```{r}
+#| eval: false
+con <- duckdb::dbConnect(duckdb::duckdb())
+result <- DBI::dbGetQuery(con, "SELECT * FROM 'data.parquet' WHERE condition")
+```
