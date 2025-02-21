@@ -508,107 +508,59 @@ We are interested in the lab measurements of creatinine (50912), potassium (5097
 Hint: Use the Parquet format you generated in Homework 2. For reproducibility, make `labevents_pq` folder available at the current working directory `hw3`, for example, by a symbolic link.
 
 ```{r}
-library(DBI)
-library(duckdb)
-library(tidyverse)
+library(arrow)
 
-con <- dbConnect(duckdb(), dbdir = "mimic.duckdb", read_only = FALSE)
+# Read the gzipped CSV file
+labitems <- read_csv_arrow("~/mimic/hosp/d_labitems.csv.gz")
 
-dbExecute(con, "
-  CREATE OR REPLACE TABLE labevents AS 
-  SELECT * FROM parquet_scan('labevents_pq/*.parquet')
-")
-copy_to(con, icustays_tble, "icustays", overwrite = TRUE)
+# Write the data to a Parquet file
+write_parquet(labitems, "labitems_tble.parquet")
+
+# Optionally, open the Parquet dataset as a table
+labitems_tble <- open_dataset("labitems_tble.parquet", format = "parquet")
 ```
 
 ```{r}
-dbExecute(con, "
-  CREATE OR REPLACE TEMP TABLE labevents_filtered AS
-  SELECT subject_id, itemid, storetime, valuenum
-  FROM labevents
-  WHERE itemid IN (50912, 50971, 50983, 50902, 50882, 51221, 51301, 50931)
-")
-
-# join icustays, and only keep storetime < intime
-dbExecute(con, "
-  CREATE OR REPLACE TEMP TABLE labevents_icu AS
-  SELECT lf.subject_id,
-         i.stay_id,
-         lf.itemid,
-         lf.storetime,
-         lf.valuenum,
-         i.intime
-  FROM labevents_filtered lf
-  JOIN icustays i
-    ON lf.subject_id = i.subject_id
-  WHERE lf.storetime < i.intime
-")
-
-# group subject_id, stay_id, itemid, and keep the max storetime
-dbExecute(con, "
-  CREATE OR REPLACE TEMP TABLE labevents_last AS
-  WITH ranked AS (
-    SELECT subject_id,
-           stay_id,
-           itemid,
-           valuenum,
-           storetime,
-           ROW_NUMBER() OVER (
-             PARTITION BY subject_id, stay_id, itemid
-             ORDER BY storetime DESC
-           ) AS rn
-    FROM labevents_icu
-  )
-  SELECT subject_id, stay_id, itemid, valuenum
-  FROM ranked
-  WHERE rn = 1
-")
+itemid_label <- c(
+  "50912" = "creatinine",
+  "50971" = "potassium",
+  "50983" = "sodium",
+  "50902" = "chloride",
+  "50882" = "bicarbonate",
+  "51221" = "hematocrit",
+  "51301" = "white_blood_cells",
+  "50931" = "glucose"
+)
 ```
 
 
 ```{r}
-labevents_last_df <- dbGetQuery(con, "SELECT * FROM labevents_last")
+labevents_tble <- open_dataset("labevents_pq", format = "parquet") |>
+  to_duckdb() |>
+  select(subject_id, itemid, storetime, valuenum) |>
+  filter(itemid %in% c(50912, 50971, 50983, 50902, 50882, 51221, 51301, 50931)) |>
+  left_join(
+    select(icustays_tble, subject_id, stay_id, intime),
+    by = c("subject_id"),
+    copy = TRUE
+  ) |>
+  filter(storetime < intime) |>
+  group_by(subject_id, stay_id, itemid) |>
+  slice_max(storetime, n = 1) |>
+  select(-storetime, -intime) |>
+  ungroup() |>
+  pivot_wider(names_from = itemid, values_from = valuenum) |>
+  rename_at(
+    vars(names(itemid_label)),    
+    ~ itemid_label[.]
+    ) |>
+  show_query() |>
+  collect() |>
+  arrange(subject_id, stay_id) |>
+  relocate(subject_id, stay_id)
 
-labevents_wide <- labevents_last_df %>%
-  pivot_wider(
-    id_cols = c("subject_id", "stay_id"),
-    names_from = "itemid",
-    values_from = "valuenum"
-  ) %>%
-  rename(
-    creatinine  = `50912`,
-    potassium   = `50971`,
-    sodium      = `50983`,
-    chloride    = `50902`,
-    bicarbonate = `50882`,
-    hematocrit  = `51221`,
-    wbc         = `51301`,
-    glucose     = `50931`
-  )
-
-labevents_tble <- icustays_tble %>%
-  left_join(labevents_wide, by = c("subject_id", "stay_id")) %>%
-  arrange(subject_id, stay_id)  # order by subject_id, stay_id
+print(labevents_tble)
 ```
-
-```{r}
-labevents_tble_minimal <- labevents_tble %>%
-  select(
-    subject_id,
-    stay_id,
-    bicarbonate,
-    chloride,
-    creatinine,
-    glucose,
-    potassium,
-    sodium,
-    hematocrit,
-    wbc
-  )
-
-print(labevents_tble_minimal)
-```
-
 
 
 ## Q6. Vitals from charted events
@@ -629,13 +581,9 @@ We are interested in the vitals for ICU patients: heart rate (220045), systolic 
 
 Hint: Use the Parquet format you generated in Homework 2. For reproducibility, make `chartevents_pq` folder available at the current working directory, for example, by a symbolic link.
 
-**First generate chartevents_pq using Parquet**
-
 ```{r}
 library(arrow)
-library(dplyr)
 
-# Path to your compressed CSV
 chartevents_csv <- "~/mimic/icu/chartevents.csv.gz"
 # A folder (not a single file) that will contain Parquet data
 chartevents_parquet <- "chartevents_pq"
@@ -643,108 +591,45 @@ dataset <- open_dataset(chartevents_csv, format = "csv")
 write_dataset(dataset, chartevents_parquet, format = "parquet")
 ```
 
-**Then use the Parquet data to generate the final table**
 
 ```{r}
-library(DBI)
-library(duckdb)
-library(tidyverse)
-
-con <- dbConnect(duckdb(), dbdir = "mimic.duckdb", read_only = FALSE)
-
-dbExecute(con, "
-  CREATE OR REPLACE TABLE chartevents AS
-  SELECT * FROM parquet_scan('chartevents_pq/*.parquet')
-")
-
-copy_to(con, icustays_tble, "icustays", overwrite = TRUE)
+itemid_label <- c(
+  "220045" = "heart_rate",
+  "220179" = "systolic non-invasive blood pressure",
+  "220180" = "diastolic non-invasive blood pressure",
+  "223761" = "temperature in Fahrenheit",
+  "220210" = "respiratory rate"
+)
 ```
 
-```{r}
-dbExecute(con, "
-  CREATE OR REPLACE TEMP TABLE chartevents_filtered AS
-  SELECT subject_id, itemid, storetime, valuenum
-  FROM chartevents
-  WHERE itemid IN (220045, 220179, 220180, 223761, 220210)
-")
-
-dbExecute(con, "
-  CREATE OR REPLACE TEMP TABLE chartevents_icu AS
-  SELECT cf.subject_id,
-         i.stay_id,
-         cf.itemid,
-         cf.storetime,
-         AVG(cf.valuenum) AS avg_valuenum,
-         i.intime
-  FROM chartevents_filtered cf
-  JOIN icustays i
-    ON cf.subject_id = i.subject_id
-  WHERE cf.storetime >= i.intime
-  GROUP BY cf.subject_id, i.stay_id, cf.itemid, cf.storetime, i.intime;
-")
-
-dbExecute(con, "
-  CREATE OR REPLACE TEMP TABLE chartevents_first AS
-  WITH ranked AS (
-    SELECT subject_id,
-           stay_id,
-           itemid,
-           avg_valuenum,
-           storetime,
-           ROW_NUMBER() OVER (
-             PARTITION BY subject_id, stay_id, itemid
-             ORDER BY storetime ASC
-           ) AS rn
-    FROM chartevents_icu
-  )
-  SELECT subject_id, stay_id, itemid, avg_valuenum
-  FROM ranked
-  WHERE rn = 1
-")
-```
 
 ```{r}
-chartevents_first_df <- dbGetQuery(con, "SELECT * FROM chartevents_first")
-
-chartevents_wide <- chartevents_first_df %>%
-  pivot_wider(
-    id_cols = c("subject_id", "stay_id"),
-    names_from = "itemid",
-    values_from = "avg_valuenum"
-  ) %>%
-  rename(
-    heart_rate                        = `220045`,
-    non_invasive_blood_pressure_systolic  = `220179`,
-    non_invasive_blood_pressure_diastolic = `220180`,
-    temperature_fahrenheit           = `223761`,
-    respiratory_rate                 = `220210`
-  )
-
-chartevents_tble <- icustays_tble %>%
-  left_join(chartevents_wide, by = c("subject_id", "stay_id")) %>%
+chartevents_tble <- open_dataset("chartevents_pq", format = "parquet") |>
+  to_duckdb() |>
+  select(subject_id, itemid, storetime, valuenum) |>
+  filter(itemid %in% c(220045, 220179, 220180, 223761, 220210)) |>
+  left_join(
+    select(icustays_tble, subject_id, stay_id, intime, outtime),
+    by = "subject_id",
+    copy = TRUE
+  ) |>
+  filter(storetime >= intime, storetime <= outtime) |>
+  group_by(subject_id, stay_id, itemid) |>
+  slice_min(storetime, n = 1, with_ties = FALSE) |>
+  summarise(valuenum = mean(as.numeric(valuenum), na.rm = TRUE), 
+            .groups = "drop") |>
+  ungroup() |>
+  pivot_wider(names_from = itemid, values_from = valuenum) |>
+  rename_at(
+    vars(names(itemid_label)),
+    ~ itemid_label[.]
+  ) |>
+  show_query() |>
+  collect() |>
   arrange(subject_id, stay_id)
+
+print(chartevents_tble)
 ```
-
-```{r}
-chartevents_tble_minimal <- chartevents_tble %>%
-  select(
-    subject_id,
-    stay_id,
-    heart_rate,
-    non_invasive_blood_pressure_systolic,
-    non_invasive_blood_pressure_diastolic,
-    temperature_fahrenheit,
-    respiratory_rate
-  )
-
-print(chartevents_tble_minimal)
-```
-
-```{r}
-rm(chartevents_first_df, chartevents_wide)
-dbDisconnect(con)
-```
-
 
 ## Q7. Putting things together
 
@@ -763,19 +648,19 @@ The final `mimic_icu_cohort` should have one row per ICU stay and columns for ea
 ```{r}
 mimic_icu_cohort <- icustays_tble %>%
   # 1) Join ICU stays with admissions
-  inner_join(admissions_tble, by = c("subject_id", "hadm_id")) %>%
+  left_join(admissions_tble, by = c("subject_id", "hadm_id")) %>%
   
   # 2) Join with patients
-  inner_join(patients_tble, by = "subject_id") %>%
+  left_join(patients_tble, by = "subject_id") %>%
   
-  # 3) Filter to adult ICU stays (example using anchor_age >= 18 in MIMIC-IV)
+  # 3) Filter to adult ICU stays
   filter(anchor_age >= 18) %>%
   
   # 4) Join the last lab measurements before ICU (one row per ICU stay)
-  left_join(labevents_tble, by = c("subject_id", "hadm_id", "stay_id")) %>%
+  left_join(labevents_tble, by = c("subject_id", "stay_id")) %>%
   
   # 5) Join the first vitals during ICU (also one row per ICU stay)
-  left_join(chartevents_tble, by = c("subject_id", "hadm_id", "stay_id"))
+  left_join(chartevents_tble, by = c("subject_id", "stay_id"))
 
 mimic_icu_cohort
 
@@ -874,7 +759,7 @@ ggplot(mimic_icu_cohort, aes(x = anchor_age, y = los)) +
 # correlation of each lab vs LOS
 labs_of_interest <- c("creatinine", "potassium", "sodium", 
                       "chloride", "bicarbonate", "hematocrit", 
-                      "wbc", "glucose")
+                      "white_blood_cells", "glucose")
 
 mimic_icu_cohort %>%
   select(los, all_of(labs_of_interest)) %>%
@@ -887,10 +772,10 @@ mimic_icu_cohort %>%
 
 ```{r}
 vitals_of_interest <- c("heart_rate", 
-                        "non_invasive_blood_pressure_systolic",
-                        "non_invasive_blood_pressure_diastolic",
-                        "temperature_fahrenheit",
-                        "respiratory_rate")
+                        "systolic non-invasive blood pressure",
+                        "diastolic non-invasive blood pressure",
+                        "temperature in Fahrenheit",
+                        "respiratory rate")
 
 mimic_icu_cohort %>%
   select(los, all_of(vitals_of_interest)) %>%
