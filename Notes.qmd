@@ -1,0 +1,517 @@
+---
+title: "Notes"
+format:
+  html:
+    toc: true
+    toc-depth: 4
+    toc-location: left
+---
+
+## Tidyverse
+
+- [tidyverse](https://www.tidyverse.org/) is a collection of R packages for data ingestion, wrangling, and visualization.
+
+```{r}
+library("tidyverse")
+```
+
+### Tibbles
+
+- Tibbles: 
+  - High level of data frames
+  - From **tidyverse**
+  - R displays ALL rows of a regular data frame, but tibbles only prints the **first 10 rows**
+  
+### readr (R), pandas (Python) - Data import
+
+- [readr](https://github.com/tidyverse/readr) package: ingest text files into tibbles.
+
+  - `read_csv()`: comma-separated (CSV) files (,)
+   -  `read_csv` can read gz file directly (work directly with **compressed** file)
+  - `read_csv2()`: semicolon-separated files (;)
+  - `read_tsv()`: tab-separated files
+  - `read_delim()`: arbitrarily defined delimiter files
+  
+  
+::: {.callout-tip}
+### Handle Big Dataset
+
+#### First ask: how big is it?
+- Not big: half millions rows (take seconds to run)
+- Big: 100 or 500 millions rows that cannot be loaded into computer (use following tools)
+
+#### May not work
+  - `read.csv` (base R): easy to use, but is the slowest and uses the most memory
+  - `read_csv` (tidyverse: readr): faster than `read.csv`, read csv efficiently, understand column type & optimize memory usage and analysis, but still slow and uses more memory
+    - can select only certain columns to read (`col_select` argument)
+    - When reading filtered data, still load all columns to keep the filtered data, so may not work
+  - `fread`(data.table): the fastest and uses the least memory
+
+#### bash decompress gz file
+- 1) use `zcat` to decompress a gz file and pipe it to `awk`
+- 2) use `awk` to select+filter
+- 3) use `gzip` to compress the file
+- NOT trying to load the whole dataset, so use limited memory
+- 4) read the smaller compressed file with `read_csv`
+
+#### Arrow vs Parquet vs DuckDB format
+- Apache Arrow: 
+  - in-memory **columnar** data format (store data in columns)
+  - zero-copy read and write; optimize CPU for vectorized operations
+  - **Ingest the original big file**
+  - _CANNOT work with compressed file: have to decompress first_
+  - NOT trying to load everything, just **load selected columns and filtered rows**
+- Parquet: 
+  - rewrite the big file into Parquet format
+  - a highly **compressed** data format that can reduce memory usage
+  - **columnar** storage: faster; all operations are done column-wise in DA
+  - When reading filtered data, **only load filtered columns** (save time and memory)
+- DuckDB: embedded SQL database that can store and retrieve data quickly
+  - can read Parquet files and is compatible with Arrow, so can be used for analytics directly
+  - **Best option: Parquet format with DuckDB**
+  
+  
+```{r}
+#| eval: false
+con <- duckdb::dbConnect(duckdb::duckdb())
+result <- DBI::dbGetQuery(con, "SELECT * FROM 'data.parquet' WHERE condition")
+```
+
+:::
+
+#### read & write csv
+
+```{r}
+#| eval: false
+heights <- read_csv("heights.csv") |> print(width = Inf)
+write_csv(challenge, "challenge.csv") # write to csv
+```
+
+- readxl package (part of tidyverse) reads both xls and xlsx files:
+```{r}
+#| eval: false
+library(readxl)
+read_excel("datasets.xls")
+excel_sheets("datasets.xlsx") # list the sheet name
+```
+
+### Other types of data
+
+- **DBI**, along with a database specific backend (e.g. **RMySQL**, **RSQLite**, **RPostgreSQL** etc) allows us to run SQL queries against a database and return a data frame. Later we will use DBI to work with databases.
+- **googlesheets4** reads from and writes to Google Sheets.
+- **haven** reads SPSS, Stata, and SAS files.
+- **jsonlite** reads json files.
+- **xml2** reads XML files.
+- **tidyxl** reads non-tabular data from Excel.
+
+[Posit readr cheat sheet](https://rstudio.github.io/cheatsheets/html/data-import.html) 
+
+### tidy data
+
+#### Missing data & duplicate rows
+
+- `drop_na()`: remove rows with missing values
+- `fill()`: fill missing values with a specific value (previous or next value)
+  - `fill(c(year, cases), .direction = "down")` fill with the *previous* value
+  - `fill(c(year, cases), .direction = "up")` fill with the *next* value
+- `replace_na()`: replace missing values with a specific value
+- `distinct()`: remove duplicate rows
+
+#### dyplr (from Tidyverse)
+
+- Join: `left_join`, `right_join`, `inner_join`, `full_join`
+  - **Inner Join**: Returns only the matching rows from both tables
+  - **Left Join**: Returns all rows from the left table and matching rows from the right table; unmatched rows in the right table return NULL
+  - **Right Join** (Right Outer Join): Returns all rows from the right table and matching rows from the left table; unmatched rows in the left table return NULL
+  - **Full Outer Join**: Returns all rows from both tables, filling in NULLs where there is no match
+  - **Cross Join**: Returns the _Cartesian product_ of both tables (every row in the first table pairs with every row in the second table)
+  - **Semi-join**: 
+    - returns _rows from the left table_ that have matching values in the right table
+    - but only includes columns from the left table
+  - **Anti-join**: 
+    - returns rows from the left table that do NOT have a matching value in the right table
+    - used to find missing or unmatched data
+- bind:
+  - `bind_rows(x, y)`: stack table x on top of table y
+  - `bind_cols()`: stack data frames side by side
+- `setdiff(x, y)`: return rows that are in x but not in y
+- `intersect(x, y)`: return rows that are in both x and y
+- `union(x, y)`: return all unique rows from x and y
+
+- `mutate()`: add new columns or modify existing ones
+- `transmute()`: only keep the new columns
+
+[Posit dplyr cheat sheet](https://rstudio.github.io/cheatsheets/html/data-transformation.html)
+
+
+#### Data Cleaning process
+
+- Are **missing value** parsed correctly? 
+- Are **data types** parsed correctly? 
+  - `chr` vs `fct`, data time, NA vs NaN.
+  - `chr` (character): string
+  - `fct` (factor): categorical variable (takes only certain values/options)
+    - For big data, `fct` use much less storage than `chr`: `fct` has only a few categories, but `chr` has millions of unique values
+- Are there any **duplicated rows**?
+- **Normalize** variable/column names.
+
+```{r}
+#| eval: false
+read_csv(
+  "students.txt", 
+  na = c("N/A", ""), # Parse these expressions as null values
+  show_col_types = FALSE
+  ) |> 
+  # normalize variable name
+  janitor::clean_names() |> # Make the variable names consistent (janitor package)
+  # meal_plan: fct
+  mutate(meal_plan = factor(meal_plan)) |> # Convert meal_plan from a string to a factor
+  # parse age as integer
+  mutate(age = parse_number(if_else(age == "five", "5", age))) |> # Parse string as number
+  print(width = Inf)
+```
+
+::: {.panel-tabset}
+
+#### `pivot_longer` (gathering) - wide format to long format
+```{r}
+#| eval: false
+table4a |> pivot_longer(c(`1999`, `2000`), names_to = "year", values_to = "cases")
+```
+
+#### `pivot_wider` (spreading) - long format to wide format
+```{r}
+#| eval: false
+table2 |> pivot_wider(names_from = type, values_from = count)
+```
+
+:::
+
+#### Split cells & Unite
+- `separate`:
+  - separate each cell in a column into several columns using separators/delimiters
+  - separate at a fixed position
+- `unite`
+
+### Handle data discrepancy
+
+#### `rank()` vs `slice_max()` of Flight dataset
+
+- assumed that `rank(desc(arr_delay))` and `slice_max(arr_delay, n=9)` should return the same top n values
+- `rank()`
+  - grouped the dataset by `year`, `month`, and `day`
+  - `rank(desc(arr_delay))` rank flights based on arrival delay
+  - `rank(desc(arr_delay)) <= 9` returns the top 9 values (worst 9 flights)
+```{r}
+#| eval: false
+flights_sml |> group_by(year, month, day) |> filter(rank(desc(arr_delay)) < 10)
+# generated 3,306 rows
+```
+  
+- `slice_max()`
+  - `slice_max(arr_delay, n=9)` returns the top 9 values (worst 9 flights)
+  - expected it to return the same result
+```{r}
+#| eval: false
+flights_sml |> group_by(year, month, day) |> slice_max(arr_delay, n=9)
+# generated 3,312 rows, which is 6 rows more than the rank() method
+```
+
+- Identified the difference
+  - I stored the results from both methods and compared them using setdiff() 
+  - to find which rows were included in slice_max() but not in rank()
+```{r}
+#| eval: false
+worst9_slicemax <- flights_sml |> group_by(year, month, day) |> slice_max(arr_delay, n=9)
+worst9_rank <- flights_sml |> group_by(year, month, day) |> filter(rank(desc(arr_delay)) < 10)
+setdiff(worst9_slicemax, worst9_rank)
+# The output showed 6 rows missing from the rank() result
+```
+  
+- Investigate the Ranking Methods
+  - Among the 6 missing rows, I focused on a specific day (March 19)
+  - Created multiple ranking variables with different tie-breaking methods
+```{r}
+#| eval: false
+flights_sml |> filter(month == 3, day == 19) |>
+  arrange(desc(arr_delay)) |>
+  slice_head(n=15) |>
+  mutate(
+    rank_first = rank(desc(arr_delay), ties.method = "first"),
+    rank_last = rank(desc(arr_delay), ties.method = "last"),
+    rank_random = rank(desc(arr_delay), ties.method = "random"),
+    rank_avg = rank(desc(arr_delay), ties.method = "average"),
+    rank_min = rank(desc(arr_delay), ties.method = "min"),
+    rank_max = rank(desc(arr_delay), ties.method = "max")
+  ) |> print(n=15, width = Inf)
+```
+  
+- Conclusion
+  - `slice_max()` uses "min" ranking method for handling ties
+    - here the tied values are all assigned to 9
+  - whereas `rank()` defaults to "average"
+    - tied values are assigned to 10, which is not included in top 9 values
+
+#### step by step approach
+
+- Define the Expected Outcome
+- Compare Results from Different Methods
+  - compare **summary statistics** (_row count_, _unique values_, _distributions_, _ranking_, _filtering_, or _aggregation_)
+    - `summary()`, `n()`, `distinct()`, `count()`: check differences between different methods
+  - Identify the Differences in Outputs
+    - `setdiff()`, `anti-join()`: identify **missing or extra records** in each dataset
+- Investigate Potential Causes
+  - Check function **defaults**: Some functions handle **ties**, **missing values**, or **sorting** differently
+  - Ensure data is **grouped** and **sorted** consistently
+  - Verify **tie-breaking** mechanisms: Use `rank(ties.method = "min" | "first" | "random")` to define tie behavior
+- Zoom in on a **Subset** of the Data
+  - Filter a small portion of the dataset (a specific day, category, or group)
+  - Manually inspect records using `print(df, n=15, width = Inf)` or export results to a spreadsheet for a closer look
+- Test Alternative Methods
+  - Try **different approaches** to see if the discrepancy persists (`arrange()` and `slice_head()` instead of `slice_max()`)
+  - **Visualize** the inconsistency
+  - Find the root cause & ensure consistency by explicitly setting parameters.
+
+## Visualization
+
+[Posit cheat sheet](https://rstudio.github.io/cheatsheets/html/data-visualization.html)
+
+- Interactive graphs:
+  - `library(ggplot): `ggplotly()`
+- Maps
+  - Package ggmap: `library(ggmap)`
+  - interactive maps: `library(leaflet)`
+  - [tutorial](https://nih-r25-modelersandstorytellers.github.io/2023/data-science-tutorials/00-la/00-la.html): pulling social-economic data from US Census and ACS (American Community Survey) and mapping in R.
+
+## datetime
+
+- `library(lubridate)`
+- [Posit cheat sheet](https://rstudio.github.io/cheatsheets/html/lubridate.html)
+
+## stringr (regular expression)
+
+- `stringr` is included in tidyverse
+  - `str_detect(string, pattern)`: Detect the **presence or absence of a pattern** in a string.
+  - `str_count(string, pattern)`: Count the **number of matches** in a string.
+  - `str_locate(string, pattern)`: Locate the **first position of a pattern** and return a matrix with start and end.  
+  - `str_extract(string, pattern)`: Extract text corresponding to the **first match**.
+    - Matches do not overlap
+  - `str_subset(string, pattern)`: Extract text corresponding to **all matches**.
+  - `str_split(string, pattern)`: Split string into pieces and returns a list of character vectors.  
+  - `str_replace(string, pattern, replacement)`: **Replace the first match** and returns a character vector.
+  - `str_replace_all()`: **Replace all matches**
+    - `str_replace_all(x, c("1" = "one", "2" = "two", "3" = "three"))`
+- [Posit cheat sheet](https://rstudio.github.io/cheatsheets/html/strings.html)
+
+## Scraping
+
+- Web scraping: `rvest()` package
+  - Use SelectorGadget to select the specific section on webpage and get `html_elements`
+- Scrape finance data: `quantmod` package
+  - `getSymbols`: 
+  - `src`: source; ex. yahoo finance
+  - `from` and `to`: assign timeframe
+  - `chartSeries`: visualize stock pattern
+  - opening price, daily high, daily low, closing price, transaction volumn, etc.
+
+## MIMIC data project
+
+A hundred million rows.
+
+::: {.panel-tabset}
+
+#### **Dataset 1: icustays**
+- `subject_id`: patient id
+- `hadm_id`: hospital admission id
+- `icustay_id`: ICU stay id
+- `intime`: ICU admission time
+- `outtime`: ICU discharge time
+- `los`: length of stay in the ICU
+```{bash}
+zcat < ~/mimic/icu/icustays.csv.gz | head -n 5 # decompress the gzip file
+```
+
+Import gzip file as a tibble `icustays_tble`
+```{r}
+icustays_tble <- read_csv(
+  "~/mimic/icu/icustays.csv.gz",
+  show_col_types = FALSE
+)
+```
+
+#### **Dataset 2: patients**
+- `subject_id`: patient id
+- `gender`
+- `anchor_age`: age of the first hospital admission (shifted to protect patient privacy)
+- `anchor_year`: year of the first hospital admission (shifted to protect patient privacy)
+- `dod`: date of death
+```{r}
+patients_tble <- read_csv(
+  "~/mimic/hosp/patients.csv.gz",
+  show_col_types = FALSE
+)
+```
+
+#### **Dataset 3: admissions**
+- `subject_id`: patient id
+- `hadm_id`: hospital admission id
+- `admittime`: admission time to the hospital (shifted)
+- `dischtime`: discharge time (shifted)
+- `deathtime`: time of death
+- `admission_type`: Urgent, Emergency, EU Observation, etc.
+- `admit_provider_id`: doctor id
+
+```{bash}
+zcat < ~/mimic/hosp/admissions.csv.gz | head -n 5
+```
+
+Import gzip file as a tibble `admissions_tble`
+```{r}
+admissions_tble <- read_csv(
+  "~/mimic/hosp/admissions.csv.gz",
+  show_col_types = FALSE
+)
+```
+
+#### **Dataset 4: labevents**
+
+- `labevents.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/hosp/labevents/>) contains all laboratory measurements for patients.
+- We are interested in these lab measurements: creatinine (50912), potassium (50971), sodium (50983), chloride (50902), bicarbonate (50882), hematocrit (51221), white blood cell count (51301), and glucose (50931).
+- focus on the **last available measurement (by `storetime`) before the ICU stay**.
+
+```{bash}
+zcat < ~/mimic/hosp/labevents.csv.gz | head -n 5
+```
+
+- `charttime`: when lab is measured
+- `storetime`: when measurement is stored in patient's chart system/record
+
+```{bash}
+zcat < ~/mimic/hosp/d_labitems.csv.gz | head -n 5
+```
+
+- `itemid`: lab id
+- `label`: lab variable name
+
+#### **Dataset 5: Chartevents**
+
+- `chartevents.csv.gz` (<https://mimic.mit.edu/docs/iv/modules/icu/chartevents/>) contains all the charted data available for a patient.
+- We are interested in the vitals for ICU patients: heart rate (220045), systolic non-invasive blood pressure (220179), diastolic non-invasive blood pressure (220180), body temperature in Fahrenheit (223761), and respiratory rate (220210).
+- Focus on the **first vital measurement during the ICU stay**.
+```{bash}
+zcat < ~/mimic/icu/chartevents.csv.gz | head -n 5
+zcat < ~/mimic/icu/d_items.csv.gz | head -n 5
+```
+
+- vitals: heart rate, systolic blood pressure, diastolic blood pressure, body temperature, respiratory rate, etc.
+- `itemid`: vital id
+- `valuenum`: measurement result of vitals
+- At the **earliest storetime after entering ICU**, take average of the `valuenum` for each `itemid`.
+
+:::
+
+### Create ICU cohort - merge 5 tibbles
+
+- all variables in `icustays_tble`  
+- all variables in `admissions_tble`  
+- all variables in `patients_tble`
+- _the last lab measurements before the ICU stay in `labevents_tble` _
+- _the first vital measurements during the ICU stay in `chartevents_tble`_
+
+```{r}
+icu_cohort <- icustays_tble |>
+  left_join(admissions_tble, by = c("hadm_id", "subject_id")) |>
+  left_join(patients_tble, by = "subject_id")
+```
+
+Clear workspace, only keep icu_cohort tibble
+```{r}
+#| eval: false
+rm(list = setdiff(ls(), "icu_cohort"))
+# ls() list all objects in the workspace
+# remove all of them except icu_cohort
+```
+
+- Eventually, develop a ML algorithm to predict **how long each patient is going to stay in ICU**.
+  - Features to be collected: demographics (gender, age, race, lab results, vitals, etc.)
+
+### EDA (Exploratory Data Analysis)
+
+::: {.panel-tabset}
+
+#### Is there racial disparity in the number of ICU stays?
+```{r}
+icu_cohort |>
+  group_by(subject_id) |>
+  summarise(
+    n = n(),
+    race = first(race)
+  ) |>
+  # boxplot
+  ggplot() +
+    geom_boxplot(aes(x = race, y = n)) +
+    # flip coordinate
+    coord_flip() +
+    # log scale of y-axis
+    scale_y_log10() # Log transformation handles skewed data, making it easier to visualize
+```
+
+#### Is there racial disparity in the length of ICU stays?
+```{r}
+icu_cohort |>
+  ggplot() +
+    geom_boxplot(mapping = aes(x = race, y = los)) +
+    coord_flip() +
+    scale_y_log10() # handles skewed data and makes it easier to see
+```
+
+#### Is there relationship between type of ICU and length of stay?
+```{r}
+icu_cohort |>
+  ggplot() +
+    geom_boxplot(mapping = aes(x = first_careunit, y = los)) +
+    coord_flip() +
+    scale_y_log10()
+```
+
+Some types of ICU have significantly longer stays than others.
+
+#### Is there relationship between the age of intime and length of stay?
+
+```{r}
+icu_cohort |>
+  mutate(age_at_intime = year(intime) - anchor_year + anchor_age) |>
+  ggplot(mapping = aes(x = age_at_intime, y = los)) +
+    geom_point() + # scatter plot
+    geom_smooth() + # overlaid with regression line
+    scale_y_log10()
+```
+
+#### Is there racial disparity in the mortality rate?
+```{r}
+icu_cohort |> 
+  group_by(race) |>
+  summarise(
+    mortality_rate = sum(hospital_expire_flag) / n()
+  ) |>
+  print(width = Inf) |>
+  ggplot() +
+    geom_col(mapping = aes(
+      x = reorder(race, mortality_rate), # reorder race according to mortality_rate
+      y = mortality_rate)
+      ) +
+    coord_flip()
+```
+
+Replicate the paper's findings
+
+- Unknown group has the highest mortality rate
+  - Probably because the patient was so sick that they cannot report their origin.
+- Second largest group is Native Hawaiian or Other Pacific Islander
+  - Probably because of the small sample size
+- Black/African American have low mortality rate
+  - They have less access to primary care, so they are likely to go to ICU
+  - They are mostly younger generation, so they are not likely to die
+  - _This need further investigation and causal inference_
+
+:::
