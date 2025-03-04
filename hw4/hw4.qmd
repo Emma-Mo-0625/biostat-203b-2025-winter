@@ -98,35 +98,87 @@ patients_tble <- tbl(con_bq, "patients") |>
 ### Q1.5 `labevents` data
 
 Connect to the `labevents` table and retrieve a subset that only contain subjects who appear in `icustays_tble` and the lab items listed in HW3. Only keep the last lab measurements (by `storetime`) before the ICU stay and pivot lab items to become variables/columns. Write all steps in _one_ chain of pipes.
+
 ```{r}
-# # TODO
+# TODO
+itemid_label_lab <- c(
+  "50912" = "creatinine",
+  "50971" = "potassium",
+  "50983" = "sodium",
+  "50902" = "chloride",
+  "50882" = "bicarbonate",
+  "51221" = "hematocrit",
+  "51301" = "wbc",
+  "50931" = "glucose"
+)
+```
+
+
+```{r}
 labevents_tble <- tbl(con_bq, "labevents") |>
+  select(subject_id, itemid, storetime, valuenum) |>
   filter(
     itemid %in% c(50912, 50971, 50983, 50902, 50882, 51221, 51301, 50931)) |>
   left_join(
-    icustays_tble, by = c("subject_id", "hadm_id")) |>
+    select(icustays_tble, subject_id, stay_id, intime),
+    by = c("subject_id"),
+  ) |>
   filter(storetime < intime) |>
-  # semi_join(icustays_tble, by = c("subject_id")) |>
-  # filter(subject_id %in% icustays_tble$subject_id) |>
-  # filter(subject_id %in% dplyr::pull(icustays_tble, subject_id)) |>
-  # filter(itemid %in% c(50912, 50971, 50983, 50902, 50882, 51221, 51301, 50931)) |>
-  # filter(storetime < icustays_tble$intime) |>
   group_by(subject_id, stay_id, itemid) |>
   slice_max(storetime) |>
+  select(-storetime, -intime) |>
   ungroup() |>
-  select(-intime, -first_careunit, -last_careunit, -outtime, -los, -stay_id) |>
+  pivot_wider(names_from = itemid, values_from = valuenum) |>
+  rename_at(
+    vars(names(itemid_label_lab)),
+    ~ itemid_label_lab[.]
+    ) |>
   # show_query() |>
-  # collect() |>
-  # arrange(subject_id, hadm_id) |>
+  arrange(subject_id, stay_id) |>
+  # relocate(subject_id, stay_id, sort(names(.))) |>
   print()
 ```
 
 ### Q1.6 `chartevents` data
 
 Connect to `chartevents` table and retrieve a subset that only contain subjects who appear in `icustays_tble` and the chart events listed in HW3. Only keep the first chart events (by `storetime`) during ICU stay and pivot chart events to become variables/columns. Write all steps in _one_ chain of pipes. Similary to HW3, if a vital has multiple measurements at the first `storetime`, average them.
+
 ```{r}
-# # TODO
-# chartevents_tble <- 
+# TODO
+itemid_label_chart <- c(
+  "220045" = "heart_rate",
+  "220179" = "non_invasive_blood_pressure_systolic",
+  "220180" = "non_invasive_blood_pressure_diastolic",
+  "223761" = "temperature_fahrenheit",
+  "220210" = "respiratory_rate"
+)
+```
+
+
+```{r}
+chartevents_tble <- tbl(con_bq, "chartevents") |>
+  select(subject_id, storetime, valuenum, itemid) |>
+  filter(itemid %in% c(220045, 220179, 220180, 223761, 220210)) |>
+  left_join(
+    select(icustays_tble, subject_id, stay_id, intime, outtime),
+    by = "subject_id",
+    ) |>
+  filter(storetime >= intime, storetime <= outtime) |>
+  group_by(subject_id, stay_id, itemid) |>
+  slice_min(storetime) |>
+  summarise(valuenum = mean(as.numeric(valuenum), na.rm = TRUE), 
+            .groups = "drop") |>
+  ungroup() |>
+  pivot_wider(names_from = itemid, values_from = valuenum) |>
+  rename_at(
+    vars(names(itemid_label_chart)),
+    ~ itemid_label_chart[.]
+  ) |>
+  # show_query() |>
+  arrange(subject_id, stay_id) |>
+  # relocate(subject_id, stay_id, sort(names(.))) |>
+  print()
+    
 ```
 
 ### Q1.7 Put things together
@@ -134,8 +186,17 @@ Connect to `chartevents` table and retrieve a subset that only contain subjects 
 This step is similar to Q7 of HW3. Using _one_ chain of pipes `|>` to perform following data wrangling steps: (i) start with the `icustays_tble`, (ii) merge in admissions and patients tables, (iii) keep adults only (age at ICU intime >= 18), (iv) merge in the labevents and chartevents tables, (v) `collect` the tibble, (vi) sort `subject_id`, `hadm_id`, `stay_id` and `print(width = Inf)`.
 
 ```{r}
-# # TODO
-# mimic_icu_cohort <- 
+# TODO
+mimic_icu_cohort <- icustays_tble |>
+  left_join(admissions_tble, by = c("subject_id", "hadm_id")) |>
+  left_join(patients_tble, by = "subject_id") %>%
+  filter(anchor_age >= 18) |>
+  left_join(labevents_tble, by = c("subject_id", "stay_id")) |>
+  left_join(chartevents_tble, by = c("subject_id", "stay_id")) |>
+  
+  collect() |>
+  arrange(subject_id, hadm_id, stay_id) |>
+  print(width = Inf)
 ```
 
 ### Q1.8 Preprocessing
