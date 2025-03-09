@@ -3167,7 +3167,7 @@ loaded via a namespace (and not attached):
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>memuse<span class="sc">::</span><span class="fu">Sys.meminfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Totalram:   16.000 GiB 
-Freeram:   728.758 MiB </code></pre>
+Freeram:   625.211 MiB </code></pre>
 </div>
 </div>
 <p>Load database libraries and the tidyverse frontend:</p>
@@ -3511,22 +3511,22 @@ ORDER BY is ignored in subqueries without LIMIT
 <pre><code># Source:     SQL [?? x 7]
 # Database:   BigQueryConnection
 # Ordered by: subject_id, stay_id
-   subject_id  stay_id heart_rate temperature_fahrenheit non_invasive_blood_pr…¹
-        &lt;int&gt;    &lt;int&gt;      &lt;dbl&gt;                  &lt;dbl&gt;                   &lt;dbl&gt;
- 1   10000032 39553978       91                     98.7                    48  
- 2   10000690 37081114       78                     97.7                    56.5
- 3   10000980 39765666       76                     98                     102  
- 4   10001217 34592300       79.3                   97.6                    93.3
- 5   10001217 37067082       86                     98.5                    90  
- 6   10001725 31205490       86                     97.7                    56  
- 7   10001843 39698942      124.                    97.9                    78  
- 8   10001884 37510196       49                     98.1                    30.5
- 9   10002013 39060235       80                     97.2                    62  
-10   10002114 34672098      110.                    97.9                    80  
+   subject_id  stay_id temperature_fahrenheit non_invasive_blood_pressure_syst…¹
+        &lt;int&gt;    &lt;int&gt;                  &lt;dbl&gt;                              &lt;dbl&gt;
+ 1   10000032 39553978                   98.7                               84  
+ 2   10000690 37081114                   97.7                              106  
+ 3   10000980 39765666                   98                                154  
+ 4   10001217 34592300                   97.6                              156  
+ 5   10001217 37067082                   98.5                              151  
+ 6   10001725 31205490                   97.7                               73  
+ 7   10001843 39698942                   97.9                              110  
+ 8   10001884 37510196                   98.1                              174. 
+ 9   10002013 39060235                   97.2                               98.5
+10   10002114 34672098                   97.9                              112  
 # ℹ more rows
-# ℹ abbreviated name: ¹​non_invasive_blood_pressure_diastolic
-# ℹ 2 more variables: respiratory_rate &lt;dbl&gt;,
-#   non_invasive_blood_pressure_systolic &lt;dbl&gt;</code></pre>
+# ℹ abbreviated name: ¹​non_invasive_blood_pressure_systolic
+# ℹ 3 more variables: respiratory_rate &lt;dbl&gt;,
+#   non_invasive_blood_pressure_diastolic &lt;dbl&gt;, heart_rate &lt;dbl&gt;</code></pre>
 </div>
 </div>
 </section>
@@ -3660,42 +3660,42 @@ ORDER BY is ignored in subqueries without LIMIT
  8 2131-01-20         77     141       4.5    130       88        1.1  12.2
  9 NA                 57     288       3.5    137      102        0.9   7.2
 10 2162-12-11         56      95       6.5    125       NA        3.1  16.8
-   bicarbonate hematocrit heart_rate temperature_fahrenheit
-         &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;                  &lt;dbl&gt;
- 1          25       41.1       91                     98.7
- 2          26       36.1       78                     97.7
- 3          21       27.3       76                     98  
- 4          22       38.1       86                     98.5
- 5          30       37.4       79.3                   97.6
- 6          NA       NA         86                     97.7
- 7          28       31.4      124.                    97.9
- 8          30       39.7       49                     98.1
- 9          24       34.9       80                     97.2
-10          18       34.3      110.                    97.9
-   non_invasive_blood_pressure_diastolic respiratory_rate
-                                   &lt;dbl&gt;            &lt;dbl&gt;
- 1                                  48               24  
- 2                                  56.5             24.3
- 3                                 102               23.5
- 4                                  90               18  
- 5                                  93.3             14  
- 6                                  56               19  
- 7                                  78               16.5
- 8                                  30.5             13  
- 9                                  62               14  
-10                                  80               21  
-   non_invasive_blood_pressure_systolic
-                                  &lt;dbl&gt;
- 1                                 84  
- 2                                106  
- 3                                154  
- 4                                151  
- 5                                156  
- 6                                 73  
- 7                                110  
- 8                                174. 
- 9                                 98.5
-10                                112  
+   bicarbonate hematocrit temperature_fahrenheit
+         &lt;dbl&gt;      &lt;dbl&gt;                  &lt;dbl&gt;
+ 1          25       41.1                   98.7
+ 2          26       36.1                   97.7
+ 3          21       27.3                   98  
+ 4          22       38.1                   98.5
+ 5          30       37.4                   97.6
+ 6          NA       NA                     97.7
+ 7          28       31.4                   97.9
+ 8          30       39.7                   98.1
+ 9          24       34.9                   97.2
+10          18       34.3                   97.9
+   non_invasive_blood_pressure_systolic respiratory_rate
+                                  &lt;dbl&gt;            &lt;dbl&gt;
+ 1                                 84               24  
+ 2                                106               24.3
+ 3                                154               23.5
+ 4                                151               18  
+ 5                                156               14  
+ 6                                 73               19  
+ 7                                110               16.5
+ 8                                174.              13  
+ 9                                 98.5             14  
+10                                112               21  
+   non_invasive_blood_pressure_diastolic heart_rate
+                                   &lt;dbl&gt;      &lt;dbl&gt;
+ 1                                  48         91  
+ 2                                  56.5       78  
+ 3                                 102         76  
+ 4                                  90         86  
+ 5                                  93.3       79.3
+ 6                                  56         86  
+ 7                                  78        124. 
+ 8                                  30.5       49  
+ 9                                  62         80  
+10                                  80        110. 
 # ℹ 94,448 more rows</code></pre>
 </div>
 </div>
@@ -3743,20 +3743,20 @@ The following errors were returned during `tbl_summary()`:
   for &quot;Date&quot; objects</code></pre>
 </div>
 <div class="cell-output-display">
-<div id="nvreqzobsf" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#nvreqzobsf table {
+<div id="pnfmyzvtaa" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#pnfmyzvtaa table {
 font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
 }
-#nvreqzobsf thead, #nvreqzobsf tbody, #nvreqzobsf tfoot, #nvreqzobsf tr, #nvreqzobsf td, #nvreqzobsf th {
+#pnfmyzvtaa thead, #pnfmyzvtaa tbody, #pnfmyzvtaa tfoot, #pnfmyzvtaa tr, #pnfmyzvtaa td, #pnfmyzvtaa th {
 border-style: none;
 }
-#nvreqzobsf p {
+#pnfmyzvtaa p {
 margin: 0;
 padding: 0;
 }
-#nvreqzobsf .gt_table {
+#pnfmyzvtaa .gt_table {
 display: table;
 border-collapse: collapse;
 line-height: normal;
@@ -3781,11 +3781,11 @@ border-left-style: none;
 border-left-width: 2px;
 border-left-color: #D3D3D3;
 }
-#nvreqzobsf .gt_caption {
+#pnfmyzvtaa .gt_caption {
 padding-top: 4px;
 padding-bottom: 4px;
 }
-#nvreqzobsf .gt_title {
+#pnfmyzvtaa .gt_title {
 color: #333333;
 font-size: 125%;
 font-weight: initial;
@@ -3796,7 +3796,7 @@ padding-right: 5px;
 border-bottom-color: #FFFFFF;
 border-bottom-width: 0;
 }
-#nvreqzobsf .gt_subtitle {
+#pnfmyzvtaa .gt_subtitle {
 color: #333333;
 font-size: 85%;
 font-weight: initial;
@@ -3807,7 +3807,7 @@ padding-right: 5px;
 border-top-color: #FFFFFF;
 border-top-width: 0;
 }
-#nvreqzobsf .gt_heading {
+#pnfmyzvtaa .gt_heading {
 background-color: #FFFFFF;
 text-align: center;
 border-bottom-color: #FFFFFF;
@@ -3818,12 +3818,12 @@ border-right-style: none;
 border-right-width: 1px;
 border-right-color: #D3D3D3;
 }
-#nvreqzobsf .gt_bottom_border {
+#pnfmyzvtaa .gt_bottom_border {
 border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#nvreqzobsf .gt_col_headings {
+#pnfmyzvtaa .gt_col_headings {
 border-top-style: solid;
 border-top-width: 2px;
 border-top-color: #D3D3D3;
@@ -3837,7 +3837,7 @@ border-right-style: none;
 border-right-width: 1px;
 border-right-color: #D3D3D3;
 }
-#nvreqzobsf .gt_col_heading {
+#pnfmyzvtaa .gt_col_heading {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -3856,7 +3856,7 @@ padding-left: 5px;
 padding-right: 5px;
 overflow-x: hidden;
 }
-#nvreqzobsf .gt_column_spanner_outer {
+#pnfmyzvtaa .gt_column_spanner_outer {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -3867,13 +3867,13 @@ padding-bottom: 0;
 padding-left: 4px;
 padding-right: 4px;
 }
-#nvreqzobsf .gt_column_spanner_outer:first-child {
+#pnfmyzvtaa .gt_column_spanner_outer:first-child {
 padding-left: 0;
 }
-#nvreqzobsf .gt_column_spanner_outer:last-child {
+#pnfmyzvtaa .gt_column_spanner_outer:last-child {
 padding-right: 0;
 }
-#nvreqzobsf .gt_column_spanner {
+#pnfmyzvtaa .gt_column_spanner {
 border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
@@ -3884,10 +3884,10 @@ overflow-x: hidden;
 display: inline-block;
 width: 100%;
 }
-#nvreqzobsf .gt_spanner_row {
+#pnfmyzvtaa .gt_spanner_row {
 border-bottom-style: hidden;
 }
-#nvreqzobsf .gt_group_heading {
+#pnfmyzvtaa .gt_group_heading {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -3912,7 +3912,7 @@ border-right-color: #D3D3D3;
 vertical-align: middle;
 text-align: left;
 }
-#nvreqzobsf .gt_empty_group_heading {
+#pnfmyzvtaa .gt_empty_group_heading {
 padding: 0.5px;
 color: #333333;
 background-color: #FFFFFF;
@@ -3926,13 +3926,13 @@ border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 vertical-align: middle;
 }
-#nvreqzobsf .gt_from_md > :first-child {
+#pnfmyzvtaa .gt_from_md > :first-child {
 margin-top: 0;
 }
-#nvreqzobsf .gt_from_md > :last-child {
+#pnfmyzvtaa .gt_from_md > :last-child {
 margin-bottom: 0;
 }
-#nvreqzobsf .gt_row {
+#pnfmyzvtaa .gt_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -3950,7 +3950,7 @@ border-right-color: #D3D3D3;
 vertical-align: middle;
 overflow-x: hidden;
 }
-#nvreqzobsf .gt_stub {
+#pnfmyzvtaa .gt_stub {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -3962,7 +3962,7 @@ border-right-color: #D3D3D3;
 padding-left: 5px;
 padding-right: 5px;
 }
-#nvreqzobsf .gt_stub_row_group {
+#pnfmyzvtaa .gt_stub_row_group {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -3975,13 +3975,13 @@ padding-left: 5px;
 padding-right: 5px;
 vertical-align: top;
 }
-#nvreqzobsf .gt_row_group_first td {
+#pnfmyzvtaa .gt_row_group_first td {
 border-top-width: 2px;
 }
-#nvreqzobsf .gt_row_group_first th {
+#pnfmyzvtaa .gt_row_group_first th {
 border-top-width: 2px;
 }
-#nvreqzobsf .gt_summary_row {
+#pnfmyzvtaa .gt_summary_row {
 color: #333333;
 background-color: #FFFFFF;
 text-transform: inherit;
@@ -3990,14 +3990,14 @@ padding-bottom: 8px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#nvreqzobsf .gt_first_summary_row {
+#pnfmyzvtaa .gt_first_summary_row {
 border-top-style: solid;
 border-top-color: #D3D3D3;
 }
-#nvreqzobsf .gt_first_summary_row.thick {
+#pnfmyzvtaa .gt_first_summary_row.thick {
 border-top-width: 2px;
 }
-#nvreqzobsf .gt_last_summary_row {
+#pnfmyzvtaa .gt_last_summary_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -4006,7 +4006,7 @@ border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#nvreqzobsf .gt_grand_summary_row {
+#pnfmyzvtaa .gt_grand_summary_row {
 color: #333333;
 background-color: #FFFFFF;
 text-transform: inherit;
@@ -4015,7 +4015,7 @@ padding-bottom: 8px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#nvreqzobsf .gt_first_grand_summary_row {
+#pnfmyzvtaa .gt_first_grand_summary_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -4024,7 +4024,7 @@ border-top-style: double;
 border-top-width: 6px;
 border-top-color: #D3D3D3;
 }
-#nvreqzobsf .gt_last_grand_summary_row_top {
+#pnfmyzvtaa .gt_last_grand_summary_row_top {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -4033,10 +4033,10 @@ border-bottom-style: double;
 border-bottom-width: 6px;
 border-bottom-color: #D3D3D3;
 }
-#nvreqzobsf .gt_striped {
+#pnfmyzvtaa .gt_striped {
 background-color: rgba(128, 128, 128, 0.05);
 }
-#nvreqzobsf .gt_table_body {
+#pnfmyzvtaa .gt_table_body {
 border-top-style: solid;
 border-top-width: 2px;
 border-top-color: #D3D3D3;
@@ -4044,7 +4044,7 @@ border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#nvreqzobsf .gt_footnotes {
+#pnfmyzvtaa .gt_footnotes {
 color: #333333;
 background-color: #FFFFFF;
 border-bottom-style: none;
@@ -4057,7 +4057,7 @@ border-right-style: none;
 border-right-width: 2px;
 border-right-color: #D3D3D3;
 }
-#nvreqzobsf .gt_footnote {
+#pnfmyzvtaa .gt_footnote {
 margin: 0px;
 font-size: 90%;
 padding-top: 4px;
@@ -4065,7 +4065,7 @@ padding-bottom: 4px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#nvreqzobsf .gt_sourcenotes {
+#pnfmyzvtaa .gt_sourcenotes {
 color: #333333;
 background-color: #FFFFFF;
 border-bottom-style: none;
@@ -4078,64 +4078,64 @@ border-right-style: none;
 border-right-width: 2px;
 border-right-color: #D3D3D3;
 }
-#nvreqzobsf .gt_sourcenote {
+#pnfmyzvtaa .gt_sourcenote {
 font-size: 90%;
 padding-top: 4px;
 padding-bottom: 4px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#nvreqzobsf .gt_left {
+#pnfmyzvtaa .gt_left {
 text-align: left;
 }
-#nvreqzobsf .gt_center {
+#pnfmyzvtaa .gt_center {
 text-align: center;
 }
-#nvreqzobsf .gt_right {
+#pnfmyzvtaa .gt_right {
 text-align: right;
 font-variant-numeric: tabular-nums;
 }
-#nvreqzobsf .gt_font_normal {
+#pnfmyzvtaa .gt_font_normal {
 font-weight: normal;
 }
-#nvreqzobsf .gt_font_bold {
+#pnfmyzvtaa .gt_font_bold {
 font-weight: bold;
 }
-#nvreqzobsf .gt_font_italic {
+#pnfmyzvtaa .gt_font_italic {
 font-style: italic;
 }
-#nvreqzobsf .gt_super {
+#pnfmyzvtaa .gt_super {
 font-size: 65%;
 }
-#nvreqzobsf .gt_footnote_marks {
+#pnfmyzvtaa .gt_footnote_marks {
 font-size: 75%;
 vertical-align: 0.4em;
 position: initial;
 }
-#nvreqzobsf .gt_asterisk {
+#pnfmyzvtaa .gt_asterisk {
 font-size: 100%;
 vertical-align: 0;
 }
-#nvreqzobsf .gt_indent_1 {
+#pnfmyzvtaa .gt_indent_1 {
 text-indent: 5px;
 }
-#nvreqzobsf .gt_indent_2 {
+#pnfmyzvtaa .gt_indent_2 {
 text-indent: 10px;
 }
-#nvreqzobsf .gt_indent_3 {
+#pnfmyzvtaa .gt_indent_3 {
 text-indent: 15px;
 }
-#nvreqzobsf .gt_indent_4 {
+#pnfmyzvtaa .gt_indent_4 {
 text-indent: 20px;
 }
-#nvreqzobsf .gt_indent_5 {
+#pnfmyzvtaa .gt_indent_5 {
 text-indent: 25px;
 }
-#nvreqzobsf .katex-display {
+#pnfmyzvtaa .katex-display {
 display: inline-flex !important;
 margin-bottom: 0.75em !important;
 }
-#nvreqzobsf div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#pnfmyzvtaa div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
 height: 0px !important;
 }
 </style>
@@ -11434,16 +11434,6 @@ height: 0px !important;
 <td class="gt_row gt_center" headers="stat_1">2,894</td>
 </tr>
 <tr class="even">
-<td class="gt_row gt_left" headers="label">heart_rate</td>
-<td class="gt_row gt_center" headers="stat_2">87 (75, 102)</td>
-<td class="gt_row gt_center" headers="stat_1">84 (73, 99)</td>
-</tr>
-<tr class="odd">
-<td class="gt_row gt_left" headers="label">    Unknown</td>
-<td class="gt_row gt_center" headers="stat_2">1</td>
-<td class="gt_row gt_center" headers="stat_1">84</td>
-</tr>
-<tr class="even">
 <td class="gt_row gt_left" headers="label">temperature_fahrenheit</td>
 <td class="gt_row gt_center" headers="stat_2">98.20 (97.70, 98.80)</td>
 <td class="gt_row gt_center" headers="stat_1">98.10 (97.60, 98.60)</td>
@@ -11454,14 +11444,14 @@ height: 0px !important;
 <td class="gt_row gt_center" headers="stat_1">1,386</td>
 </tr>
 <tr class="even">
-<td class="gt_row gt_left" headers="label">non_invasive_blood_pressure_diastolic</td>
-<td class="gt_row gt_center" headers="stat_2">67 (57, 79)</td>
-<td class="gt_row gt_center" headers="stat_1">68 (58, 80)</td>
+<td class="gt_row gt_left" headers="label">non_invasive_blood_pressure_systolic</td>
+<td class="gt_row gt_center" headers="stat_2">120 (104, 137)</td>
+<td class="gt_row gt_center" headers="stat_1">122 (107, 138)</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="label">    Unknown</td>
-<td class="gt_row gt_center" headers="stat_2">350</td>
-<td class="gt_row gt_center" headers="stat_1">1,015</td>
+<td class="gt_row gt_center" headers="stat_2">347</td>
+<td class="gt_row gt_center" headers="stat_1">1,013</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="label">respiratory_rate</td>
@@ -11474,14 +11464,24 @@ height: 0px !important;
 <td class="gt_row gt_center" headers="stat_1">181</td>
 </tr>
 <tr class="even">
-<td class="gt_row gt_left" headers="label">non_invasive_blood_pressure_systolic</td>
-<td class="gt_row gt_center" headers="stat_2">120 (104, 137)</td>
-<td class="gt_row gt_center" headers="stat_1">122 (107, 138)</td>
+<td class="gt_row gt_left" headers="label">non_invasive_blood_pressure_diastolic</td>
+<td class="gt_row gt_center" headers="stat_2">67 (57, 79)</td>
+<td class="gt_row gt_center" headers="stat_1">68 (58, 80)</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="label">    Unknown</td>
-<td class="gt_row gt_center" headers="stat_2">347</td>
-<td class="gt_row gt_center" headers="stat_1">1,013</td>
+<td class="gt_row gt_center" headers="stat_2">350</td>
+<td class="gt_row gt_center" headers="stat_1">1,015</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="label">heart_rate</td>
+<td class="gt_row gt_center" headers="stat_2">87 (75, 102)</td>
+<td class="gt_row gt_center" headers="stat_1">84 (73, 99)</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="label">    Unknown</td>
+<td class="gt_row gt_center" headers="stat_2">1</td>
+<td class="gt_row gt_center" headers="stat_1">84</td>
 </tr>
 </tbody><tfoot class="gt_footnotes">
 <tr class="even">
@@ -11932,7 +11932,7 @@ Attaching package: &#39;DT&#39;</code></pre>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">shinyApp</span>(ui, server)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><iframe data-deferred-src="appbb52b16e1b1741d77a43ebc10a136af1/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe></p>
+<p><iframe data-deferred-src="app19bf38686377f7c5138df2ed83b459f2/?w=&amp;__subapp__=1" width="100%" height="400" class="shiny-frame shiny-frame-deferred"></iframe></p>
 </div>
 </div>
 </section>

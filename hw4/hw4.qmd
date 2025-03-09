@@ -179,7 +179,6 @@ chartevents_tble <- tbl(con_bq, "chartevents") |>
   arrange(subject_id, stay_id) |>
   # relocate(subject_id, stay_id, sort(names(.))) |>
   print()
-    
 ```
 
 ### Q1.7 Put things together
