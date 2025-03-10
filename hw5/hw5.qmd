@@ -19,35 +19,6 @@ Using the ICU cohort `mimiciv_icu_cohort.rds` you built in Homework 4, develop a
 
 1. Data preprocessing and feature engineering.
 
-```{r}
-# Load necessary libraries
-library(dplyr)
-library(caret)
-library(tidymodels)
-
-# Load dataset
-mimic_data <- readRDS("../hw4/mimiciv_shiny/mimic_icu_cohort.rds")
-
-# Select only the features available at ICU admission
-icu_data <- mimic_data |>
-  select(gender, age_intime, marital_status, race, first_careunit,
-         glucose, potassium, sodium, chloride, creatinine, wbc, bicarbonate, hematocrit,
-         heart_rate, temperature_fahrenheit, non_invasive_blood_pressure_diastolic,
-         respiratory_rate, non_invasive_blood_pressure_systolic,
-         los_long)
-
-# Convert categorical variables to factors
-icu_recipe <- recipe(los_long ~ ., data = icu_data) |>
-  # Convert categorical variables to factors
-  step_mutate_at(c("gender", "marital_status", "race", "first_careunit"), fn = as.factor) |>
-  # Create dummy variables for categorical predictors
-  step_dummy(all_nominal_predictors()) |>
-  # Normalize all numeric predictors (center and scale)
-  step_normalize(all_numeric_predictors())
-
-```
-
-
 2. Partition data into 50% training set and 50% test set. Stratify partitioning according to `los_long`. For grading purpose, sort the data by `subject_id`, `hadm_id`, and `stay_id` and use the seed `203` for the initial data split. Below is the sample code.
 ```{r}
 #| eval: false
@@ -68,3 +39,148 @@ data_split <- initial_split(
 3. Train and tune the models using the training set.
 
 4. Compare model classification performance on the test set. Report both the area under ROC curve and accuracy for each machine learning algorithm and the model stacking. Interpret the results. What are the most important features in predicting long ICU stays? How do the models compare in terms of performance and interpretability?
+
+
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(caret)
+library(tidymodels)
+library(ranger)
+
+# Load dataset
+mimic_data <- readRDS("../hw4/mimiciv_shiny/mimic_icu_cohort.rds")
+
+# Select only the features available at ICU admission
+icu_data <- mimic_data |>
+  arrange(subject_id, hadm_id, stay_id) |>
+  select(gender, age_intime, marital_status, race, first_careunit,
+         glucose, potassium, sodium, chloride, creatinine, wbc, bicarbonate, hematocrit,
+         heart_rate, temperature_fahrenheit, non_invasive_blood_pressure_diastolic,
+         respiratory_rate, non_invasive_blood_pressure_systolic,
+         los_long)
+```
+
+
+### Random Forest
+
+```{r}
+set.seed(203)
+
+icu_data_sorted <- icu_data %>%
+  filter(!is.na(los_long)) %>%  # drop rows where los_long is NA
+  mutate(los_long = as.factor(los_long)) # ensure it's a factor
+
+# Create a 50/50 split stratified by los_long
+data_split <- initial_split(icu_data_sorted, 
+                            strata = "los_long",
+                            prop = 0.5)
+data_split
+```
+
+
+```{r}
+train_data <- training(data_split)
+test_data  <- testing(data_split)
+dim(train_data)
+dim(test_data)
+```
+
+```{r}
+# Convert categorical variables to factors
+rf_recipe <- recipe(los_long ~ ., data = train_data) |>
+  # Convert categorical variables to factors
+  step_mutate_at(c("gender", "marital_status", "race", "first_careunit"), fn = as.factor) |>
+  # Impute missing numeric predictors with the mean
+  step_impute_mean(all_numeric_predictors()) |>
+  # Impute missing categorical predictors with the mode
+  step_impute_mode(all_nominal_predictors()) |>
+  # Remove predictors with zero variance
+  step_zv(all_predictors()) |>
+  
+  print()
+```
+
+```{r}
+rf_spec <- rand_forest(
+  mtry  = tune(),   # number of variables randomly sampled at each split
+  trees = tune(),   # number of trees in the ensemble
+  min_n = tune()
+) |>
+  set_engine("ranger") |>
+  set_mode("classification")
+rf_spec
+```
+
+```{r}
+# Create the workflow combining the recipe and the model
+rf_workflow <- workflow() |>
+  add_recipe(rf_recipe) |>
+  add_model(rf_spec)
+rf_workflow
+```
+
+```{r}
+coarse_grid <- grid_regular(
+  mtry(range = c(3, 3)),
+  trees(range = c(110, 130)),
+  min_n(range = c(4, 4)),
+  levels = 3
+)
+
+```
+
+```{r}
+# Create 5-fold cross-validation, stratified by los_long
+set.seed(203)
+icu_folds <- vfold_cv(train_data, v = 5, strata = los_long)
+icu_folds
+```
+
+```{r}
+rf_tune_results <- tune_grid(
+  rf_workflow,
+  resamples = icu_folds,
+  grid = coarse_grid,
+  metrics = metric_set(roc_auc, accuracy)
+)
+rf_tune_results
+```
+
+
+```{r}
+# show top models
+rf_tune_results |> show_best(metric = "roc_auc")
+```
+
+```{r}
+# select the best model
+best_rf_params <- select_best(rf_tune_results, metric = "roc_auc")
+best_rf_params
+```
+
+```{r}
+# Final workflow
+final_rf_workflow <- finalize_workflow(rf_workflow, best_rf_params)
+final_rf_workflow
+```
+
+```{r}
+# Fit the final model on the training data
+final_rf_fit <- final_rf_workflow |> last_fit(data_split)
+final_rf_fit |> 
+  collect_metrics()
+```
+
+```{r}
+test_predictions <- final_rf_fit |>
+  collect_predictions()
+test_predictions
+```
+
+
+### SVM
+
+
+
