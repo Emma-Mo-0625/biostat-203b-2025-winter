@@ -3586,21 +3586,25 @@ Computational engine: glmnet </code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tuning: Use a Very Narrow/Coarse Grid</span></span>
-<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>narrow_grid <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(</span>
-<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">penalty</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="fl">0.005</span>, <span class="fl">0.02</span>)),  </span>
-<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mixture</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="fl">0.4</span>, <span class="fl">0.6</span>)),    </span>
-<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">levels =</span> <span class="dv">2</span></span>
-<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>narrow_grid</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tuning</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>logit_grid <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(</span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">penalty</span>(),  </span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mixture</span>()   </span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>logit_grid</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 4 × 2
-  penalty mixture
-    &lt;dbl&gt;   &lt;dbl&gt;
-1    1.01     0.4
-2    1.05     0.4
-3    1.01     0.6
-4    1.05     0.6</code></pre>
+<pre><code># A tibble: 9 × 2
+       penalty mixture
+         &lt;dbl&gt;   &lt;dbl&gt;
+1 0.0000000001     0  
+2 0.00001          0  
+3 1                0  
+4 0.0000000001     0.5
+5 0.00001          0.5
+6 1                0.5
+7 0.0000000001     1  
+8 0.00001          1  
+9 1                1  </code></pre>
 </div>
 </div>
 <div class="cell">
@@ -3611,47 +3615,48 @@ Computational engine: glmnet </code></pre>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tune the SVM model using the coarse grid</span></span>
 <span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">203</span>)</span>
-<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>log_reg_narrow_tune <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(</span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>log_reg_tune <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(</span>
 <span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>  log_reg_workflow,</span>
 <span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">resamples =</span> icu_folds,</span>
-<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid =</span> narrow_grid,</span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid =</span> logit_grid,</span>
 <span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">metrics =</span> <span class="fu">metric_set</span>(roc_auc, accuracy)</span>
 <span id="cb65-8"><a href="#cb65-8" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb65-9"><a href="#cb65-9" aria-hidden="true" tabindex="-1"></a>log_reg_narrow_tune</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb65-9"><a href="#cb65-9" aria-hidden="true" tabindex="-1"></a>log_reg_tune</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># Tuning results
 # 5-fold cross-validation using stratification 
 # A tibble: 5 × 4
-  splits               id    .metrics         .notes          
-  &lt;list&gt;               &lt;chr&gt; &lt;list&gt;           &lt;list&gt;          
-1 &lt;split [37776/9445]&gt; Fold1 &lt;tibble [8 × 6]&gt; &lt;tibble [0 × 3]&gt;
-2 &lt;split [37776/9445]&gt; Fold2 &lt;tibble [8 × 6]&gt; &lt;tibble [0 × 3]&gt;
-3 &lt;split [37776/9445]&gt; Fold3 &lt;tibble [8 × 6]&gt; &lt;tibble [0 × 3]&gt;
-4 &lt;split [37778/9443]&gt; Fold4 &lt;tibble [8 × 6]&gt; &lt;tibble [0 × 3]&gt;
-5 &lt;split [37778/9443]&gt; Fold5 &lt;tibble [8 × 6]&gt; &lt;tibble [0 × 3]&gt;</code></pre>
+  splits               id    .metrics          .notes          
+  &lt;list&gt;               &lt;chr&gt; &lt;list&gt;            &lt;list&gt;          
+1 &lt;split [37776/9445]&gt; Fold1 &lt;tibble [18 × 6]&gt; &lt;tibble [0 × 3]&gt;
+2 &lt;split [37776/9445]&gt; Fold2 &lt;tibble [18 × 6]&gt; &lt;tibble [0 × 3]&gt;
+3 &lt;split [37776/9445]&gt; Fold3 &lt;tibble [18 × 6]&gt; &lt;tibble [0 × 3]&gt;
+4 &lt;split [37778/9443]&gt; Fold4 &lt;tibble [18 × 6]&gt; &lt;tibble [0 × 3]&gt;
+5 &lt;split [37778/9443]&gt; Fold5 &lt;tibble [18 × 6]&gt; &lt;tibble [0 × 3]&gt;</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>log_reg_narrow_tune <span class="sc">|&gt;</span> <span class="fu">show_best</span>(<span class="at">metric =</span> <span class="st">&quot;roc_auc&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>log_reg_tune <span class="sc">|&gt;</span> <span class="fu">show_best</span>(<span class="at">metric =</span> <span class="st">&quot;roc_auc&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 4 × 8
-  penalty mixture .metric .estimator  mean     n std_err .config             
-    &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               
-1    1.01     0.4 roc_auc binary       0.5     5       0 Preprocessor1_Model1
-2    1.05     0.4 roc_auc binary       0.5     5       0 Preprocessor1_Model2
-3    1.01     0.6 roc_auc binary       0.5     5       0 Preprocessor1_Model3
-4    1.05     0.6 roc_auc binary       0.5     5       0 Preprocessor1_Model4</code></pre>
+<pre><code># A tibble: 5 × 8
+       penalty mixture .metric .estimator  mean     n std_err .config           
+         &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;             
+1 0.0000000001     0   roc_auc binary     0.596     5 0.00136 Preprocessor1_Mod…
+2 0.00001          0   roc_auc binary     0.596     5 0.00136 Preprocessor1_Mod…
+3 0.0000000001     0.5 roc_auc binary     0.596     5 0.00132 Preprocessor1_Mod…
+4 0.00001          0.5 roc_auc binary     0.596     5 0.00132 Preprocessor1_Mod…
+5 0.0000000001     1   roc_auc binary     0.596     5 0.00131 Preprocessor1_Mod…</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>best_logit <span class="ot">&lt;-</span> log_reg_narrow_tune <span class="sc">|&gt;</span></span>
+<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>best_logit <span class="ot">&lt;-</span> log_reg_tune <span class="sc">|&gt;</span></span>
 <span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select_best</span>(<span class="at">metric =</span> <span class="st">&quot;roc_auc&quot;</span>)</span>
 <span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>best_logit</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 1 × 3
-  penalty mixture .config             
-    &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;               
-1    1.01     0.4 Preprocessor1_Model1</code></pre>
+       penalty mixture .config             
+         &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;               
+1 0.0000000001       0 Preprocessor1_Model1</code></pre>
 </div>
 </div>
 <div class="cell">
@@ -3677,8 +3682,8 @@ Model: logistic_reg()
 Logistic Regression Model Specification (classification)
 
 Main Arguments:
-  penalty = 1.0115794542599
-  mixture = 0.4
+  penalty = 1e-10
+  mixture = 0
 
 Computational engine: glmnet </code></pre>
 </div>
@@ -3701,9 +3706,9 @@ Computational engine: glmnet </code></pre>
 <pre><code># A tibble: 3 × 4
   .metric     .estimator .estimate .config             
   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               
-1 accuracy    binary         0.509 Preprocessor1_Model1
-2 roc_auc     binary         0.5   Preprocessor1_Model1
-3 brier_class binary         0.250 Preprocessor1_Model1</code></pre>
+1 accuracy    binary         0.565 Preprocessor1_Model1
+2 roc_auc     binary         0.592 Preprocessor1_Model1
+3 brier_class binary         0.244 Preprocessor1_Model1</code></pre>
 </div>
 </div>
 </section>

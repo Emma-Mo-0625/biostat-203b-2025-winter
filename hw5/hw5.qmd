@@ -223,13 +223,12 @@ log_reg_workflow
 ```
 
 ```{r}
-# Tuning: Use a Very Narrow/Coarse Grid
-narrow_grid <- grid_regular(
-  penalty(range = c(0.005, 0.02)),  
-  mixture(range = c(0.4, 0.6)),    
-  levels = 2
+# Tuning
+logit_grid <- grid_regular(
+  penalty(),  
+  mixture()   
 )
-narrow_grid
+logit_grid
 ```
 
 
@@ -242,22 +241,22 @@ icu_folds <- vfold_cv(train_data, v = 5, strata = los_long)
 ```{r}
 # Tune the SVM model using the coarse grid
 set.seed(203)
-log_reg_narrow_tune <- tune_grid(
+log_reg_tune <- tune_grid(
   log_reg_workflow,
   resamples = icu_folds,
-  grid = narrow_grid,
+  grid = logit_grid,
   metrics = metric_set(roc_auc, accuracy)
 )
-log_reg_narrow_tune
+log_reg_tune
 ```
 
 
 ```{r}
-log_reg_narrow_tune |> show_best(metric = "roc_auc")
+log_reg_tune |> show_best(metric = "roc_auc")
 ```
 
 ```{r}
-best_logit <- log_reg_narrow_tune |>
+best_logit <- log_reg_tune |>
   select_best(metric = "roc_auc")
 best_logit
 ```
