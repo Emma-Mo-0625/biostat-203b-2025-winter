@@ -1,0 +1,400 @@
+library(shiny)
+library(dplyr)
+library(ggplot2)
+library(DT)
+library(bigrquery)
+library(stringr)
+library(lubridate)
+
+# LOAD THE ICU COHORT DATA (for Summary tab)
+cohort_data <- readRDS("mimic_icu_cohort.rds")
+
+# Define variable groups for the Summary tab
+demo_vars  <- c("age_intime", "gender", "insurance", "marital_status", "race")
+lab_vars   <- c("bicarbonate", "creatinine", "potassium", "sodium", 
+                "chloride", "hematocrit", "wbc", "glucose")
+vital_vars <- c("heart_rate", "respiratory_rate", 
+                "non_invasive_blood_pressure_systolic",
+                "temperature_fahrenheit",
+                "non_invasive_blood_pressure_diastolic")
+
+var_groups <- list(
+  "demo"        = demo_vars,
+  "lab_measure" = lab_vars,
+  "vitals"      = vital_vars
+)
+
+# BIGQUERY AUTHENTICATION & CONNECTION
+satoken <- "../biostat-203b-2025-winter-4e58ec6e5579.json"
+bq_auth(path = satoken)
+con_bq <- dbConnect(
+  bigrquery::bigquery(),
+  project  = "biostat-203b-2025-winter",
+  dataset  = "mimiciv_3_1",
+  billing  = "biostat-203b-2025-winter"
+)
+
+
+# USER INTERFACE
+ui <- fluidPage(
+  titlePanel("ICU Cohort Data"),
+  
+  tabsetPanel(
+    # TAB: SUMMARY
+    tabPanel(
+      "Summary",
+      sidebarLayout(
+        sidebarPanel(
+          selectInput(
+            inputId  = "var_group",
+            label    = "Variable Group",
+            choices  = names(var_groups),
+            selected = "demo"
+          ),
+          selectInput(
+            inputId = "var_choice",
+            label   = "Variable",
+            choices = NULL  # populated in server
+          ),
+          uiOutput("xlim_ui")  # slider if numeric
+        ),
+        mainPanel(
+          plotOutput("var_plot"),
+          tableOutput("var_summary")
+        )
+      )
+    ),
+    
+    # TAB: PATIENT INFO
+    tabPanel(
+      "Patient Info",
+      sidebarLayout(
+        sidebarPanel(
+          numericInput("subject_id", "Subject ID:", value = 100001, min = 1),
+          actionButton("go_btn", "Submit"),
+          selectInput("plot_type", "Select a plot:", choices = c("ADT", "ICU"))
+        ),
+        mainPanel(
+          plotOutput("patient_plot"),
+          DTOutput("patient_table")
+        )
+      )
+    )
+  )
+)
+
+# SERVER LOGIC
+server <- function(input, output, session) {
+  
+  ## SUMMARY TAB
+  
+  # Observe variable group -> update variable choices
+  observeEvent(input$var_group, {
+    vars_for_group <- var_groups[[input$var_group]]
+    # If the group is valid, populate the second dropdown
+    if (!is.null(vars_for_group) && length(vars_for_group) > 0) {
+      updateSelectInput(
+        session, "var_choice",
+        choices  = vars_for_group,
+        selected = vars_for_group[1]
+      )
+    } else {
+      # If no valid vars, clear the dropdown
+      updateSelectInput(
+        session, "var_choice",
+        choices  = character(0)
+      )
+    }
+  }, ignoreNULL = FALSE)
+  
+  # Conditionally show a slider if the chosen variable is numeric
+  output$xlim_ui <- renderUI({
+    req(input$var_choice)
+    var_data <- cohort_data[[input$var_choice]]
+    if (is.numeric(var_data)) {
+      sliderInput(
+        "xlim",
+        label = "X-axis limit",
+        min   = floor(min(var_data, na.rm = TRUE)),
+        max   = ceiling(max(var_data, na.rm = TRUE)),
+        value = c(
+          floor(min(var_data, na.rm = TRUE)),
+          ceiling(max(var_data, na.rm = TRUE))
+        )
+      )
+    } else {
+      # No slider for categorical variables
+      return(NULL)
+    }
+  })
+  
+  # Plot the chosen variable
+  output$var_plot <- renderPlot({
+    req(input$var_choice)
+    var_data <- cohort_data[[input$var_choice]]
+    
+    if (is.numeric(var_data)) {
+      # Numeric -> histogram
+      xlims <- if (!is.null(input$xlim)) {
+        input$xlim
+      } else {
+        range(var_data, na.rm = TRUE)
+      }
+      ggplot(cohort_data, aes(x = .data[[input$var_choice]])) +
+        geom_histogram(binwidth = (xlims[2] - xlims[1]) / 30,
+                       fill = "steelblue", color = "white") +
+        coord_cartesian(xlim = xlims) +
+        labs(x = input$var_choice, y = "Count",
+             title = paste("Distribution of", input$var_choice)) +
+        theme_minimal()
+    } else {
+      # Categorical -> bar chart
+      ggplot(cohort_data, aes(x = .data[[input$var_choice]])) +
+        geom_bar(fill = "tomato") +
+        theme_minimal() +
+        labs(x = input$var_choice, y = "Count",
+             title = paste("Bar chart of", input$var_choice)) +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    }
+  })
+  
+  # Table summary
+  output$var_summary <- renderTable({
+    req(input$var_choice)
+    var_data <- cohort_data[[input$var_choice]]
+    
+    if (is.numeric(var_data)) {
+      # Numeric summary
+      summary_stats <- summary(var_data)
+      as.data.frame(t(summary_stats))
+    } else {
+      # Frequency table
+      freq <- table(var_data, useNA = "ifany")
+      as.data.frame(freq)
+    }
+  }, rownames = TRUE)
+  
+  ## PATIENT INFO TAB
+  # eventReactive: fetch either ADT or ICU data from BigQuery
+  patient_data <- eventReactive(input$go_btn, {
+    req(input$subject_id, input$plot_type)
+    pid <- input$subject_id
+    
+    if (input$plot_type == "ADT") {
+      # Table pointers
+      patients_tble        <- tbl(con_bq, "patients")
+      admissions_tble      <- tbl(con_bq, "admissions")
+      transfers_tble       <- tbl(con_bq, "transfers")
+      diagnoses_tble       <- tbl(con_bq, "diagnoses_icd")
+      d_icd_diagnoses_tble <- tbl(con_bq, "d_icd_diagnoses")
+      procedures_tble      <- tbl(con_bq, "procedures_icd")
+      d_icd_procedures_tble<- tbl(con_bq, "d_icd_procedures")
+      labevents_tble       <- tbl(con_bq, "labevents")
+      
+      # patient_info
+      patient_info <- patients_tble %>%
+        filter(subject_id == pid) %>%
+        collect()
+      
+      # admissions_info
+      admissions_info <- admissions_tble %>%
+        filter(subject_id == pid) %>%
+        collect()
+      
+      # transfers_info
+      transfers_info <- transfers_tble %>%
+        filter(subject_id == pid) %>%
+        collect() %>%
+        mutate(
+          event_type = "ADT",
+          start_date = as.Date(intime),
+          end_date   = as.Date(outtime),
+          is_icu     = str_detect(careunit, "ICU|CCU")
+        )
+      
+      # lab_info
+      lab_info <- labevents_tble %>%
+        filter(subject_id == pid) %>%
+        collect() %>%
+        mutate(
+          event_type = "Lab",
+          start_date = as.Date(charttime)
+        )
+      
+      # procedures_info
+      procedures_info <- procedures_tble %>%
+        filter(subject_id == pid) %>%
+        left_join(d_icd_procedures_tble, by = "icd_code") %>%
+        collect() %>%
+        mutate(
+          event_type = "Procedure",
+          start_date = as.Date(chartdate)
+        )
+      
+      # diagnoses_info
+      diagnoses_info <- diagnoses_tble %>%
+        filter(subject_id == pid) %>%
+        left_join(d_icd_diagnoses_tble, by = "icd_code") %>%
+        select(subject_id, hadm_id, icd_code, long_title) %>%
+        collect()
+      
+      top_diagnoses <- diagnoses_info %>%
+        slice_head(n = 3) %>%
+        pull(long_title)
+      
+      # Return a list
+      list(
+        type            = "ADT",
+        patient_info    = patient_info,
+        admissions_info = admissions_info,
+        transfers_info  = transfers_info,
+        lab_info        = lab_info,
+        procedures_info = procedures_info,
+        top_diagnoses   = top_diagnoses
+      )
+      
+    } else {
+      # ICU code
+      # 1. Table pointers
+      chartevents_tble <- tbl(con_bq, "chartevents")
+      d_items_tble     <- tbl(con_bq, "d_items")
+      icustays_tble    <- tbl(con_bq, "icustays")
+      
+      # 2. Join chartevents with d_items
+      chartevents_joined <- chartevents_tble %>%
+        left_join(d_items_tble, by = "itemid")
+      
+      # 3. Filter for relevant vitals
+      vitals <- chartevents_joined %>%
+        filter(
+          subject_id == pid,
+          label %in% c("Heart Rate",
+                       "Non Invasive Blood Pressure systolic",
+                       "Non Invasive Blood Pressure diastolic",
+                       "Respiratory Rate",
+                       "Temperature Fahrenheit")
+        ) %>%
+        collect() %>%
+        mutate(charttime = ymd_hms(charttime))
+      
+      # 4. ICU stays
+      icustays_local <- icustays_tble %>%
+        filter(subject_id == pid) %>%
+        collect() %>%
+        mutate(
+          intime  = ymd_hms(intime),
+          outtime = ymd_hms(outtime)
+        )
+      
+      # 5. Join on stay_id
+      vitals_icu <- vitals %>%
+        inner_join(icustays_local, by = c("subject_id", "stay_id")) %>%
+        mutate(
+          vital_abbr = case_when(
+            label == "Heart Rate" ~ "HR",
+            label == "Non Invasive Blood Pressure systolic"  ~ "NBPs",
+            label == "Non Invasive Blood Pressure diastolic" ~ "NBPd",
+            label == "Respiratory Rate" ~ "RR",
+            label == "Temperature Fahrenheit" ~ "Temp (F)",
+            TRUE ~ label
+          )
+        )
+      
+      list(
+        type       = "ICU",
+        vitals_icu = vitals_icu
+      )
+    }
+  })
+  
+  # Plot for Patient Info (ADT or ICU)
+  output$patient_plot <- renderPlot({
+    data_list <- patient_data()
+    req(data_list)
+    
+    if (data_list$type == "ADT") {
+      # ADT plot
+      transfers_info <- data_list$transfers_info %>%
+        mutate(is_icu = as.factor(is_icu))
+      
+      ggplot() +
+        # ADT segments
+        geom_segment(
+          data = transfers_info, 
+          aes(x = start_date, xend = end_date,
+              y = event_type, yend = event_type,
+              color = careunit, linewidth = is_icu)
+        ) +
+        scale_linewidth_manual(values = c("FALSE" = 0.5, "TRUE" = 2)) +
+        # Lab events
+        geom_point(
+          data = data_list$lab_info,
+          aes(x = start_date, y = event_type),
+          shape = 4
+        ) +
+        # Procedures
+        geom_point(
+          data = data_list$procedures_info,
+          aes(x = start_date, y = event_type, shape = long_title),
+          size = 3
+        ) +
+        labs(
+          title = paste0(
+            "Patient ", input$patient_id, ", ",
+            data_list$patient_info$gender, ", ",
+            data_list$patient_info$anchor_age, " years old, ",
+            data_list$admissions_info$race
+          ),
+          subtitle = paste(
+            "Top Diagnoses:\n", 
+            paste(data_list$top_diagnoses, collapse = "\n")
+          ),
+          x = "Calendar Time",
+          y = NULL,
+          color = "Care Unit",
+          shape = "Procedure",
+          linewidth = "ICU/CCU"
+        ) +
+        theme_minimal() +
+        theme(legend.position = "bottom") +
+        scale_x_date(date_breaks = "2 weeks", date_labels = "%b %d")
+      
+    } else {
+      # ICU plot
+      df <- data_list$vitals_icu
+      ggplot(df, aes(x = charttime, y = valuenum, color = vital_abbr)) +
+        geom_line() +
+        geom_point() +
+        facet_grid(vital_abbr ~ stay_id, scales = "free_y") +
+        scale_x_datetime(date_breaks = "12 hours", date_labels = "%b %d %H:%M") +
+        labs(
+          title = paste("Patient", input$patient_id, "ICU stays - Vitals"),
+          x = NULL,
+          y = NULL,
+          color = "Vital"
+        ) +
+        theme_minimal() +
+        theme(
+          legend.position = "bottom",
+          strip.text = element_text(size = 10)
+        )
+    }
+  })
+  
+  # Show a table of the raw data (optional)
+  output$patient_table <- renderDT({
+    data_list <- patient_data()
+    req(data_list)
+    
+    if (data_list$type == "ADT") {
+      # For example, show the transfers_info data
+      datatable(data_list$transfers_info)
+    } else {
+      # For ICU, show vitals_icu
+      datatable(data_list$vitals_icu)
+    }
+  })
+}
+
+shinyApp(ui, server)
+
