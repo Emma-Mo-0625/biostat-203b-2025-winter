@@ -143,7 +143,11 @@ rf_tune_results <- tune_grid(
   rf_workflow,
   resamples = icu_folds,
   grid = coarse_rf_grid,
-  metrics = metric_set(roc_auc, accuracy)
+  metrics = metric_set(roc_auc, accuracy),
+  control = control_grid(
+    save_pred = TRUE,
+    save_workflow = TRUE
+  )
 )
 rf_tune_results
 ```
@@ -171,12 +175,6 @@ final_rf_workflow
 final_rf_fit <- final_rf_workflow |> last_fit(data_split)
 final_rf_fit |> 
   collect_metrics()
-```
-
-```{r}
-test_predictions <- final_rf_fit |>
-  collect_predictions()
-test_predictions
 ```
 
 
@@ -245,7 +243,11 @@ log_reg_tune <- tune_grid(
   log_reg_workflow,
   resamples = icu_folds,
   grid = logit_grid,
-  metrics = metric_set(roc_auc, accuracy)
+  metrics = metric_set(roc_auc, accuracy),
+  control = control_grid(
+    save_pred = TRUE,
+    save_workflow = TRUE
+  )
 )
 log_reg_tune
 ```
@@ -333,7 +335,11 @@ xgb_tune_results <- tune_grid(
   xgb_workflow,
   resamples = icu_folds,
   grid = narrow_xgb_grid,
-  metrics = metric_set(roc_auc, accuracy)
+  metrics = metric_set(roc_auc, accuracy),
+  control = control_grid(
+    save_pred = TRUE,
+    save_workflow = TRUE
+  )
 )
 xgb_tune_results
 ```
@@ -363,6 +369,65 @@ final_xgb_fit
 ```{r}
 final_xgb_fit |> 
   collect_metrics()
+```
+
+
+### Stacking
+
+```{r}
+library(stacks)
+library(tidymodels)
+library(dplyr)
+library(yardstick)
+library(pROC)
+
+model_stack <- stacks() |>
+  add_candidates(rf_tune_results, top_n = 3) |>
+  add_candidates(log_reg_tune, top_n = 3) |>
+  add_candidates(xgb_tune_results, top_n = 3) |>
+  # Blend predictions from all base learners
+  blend_predictions() |>
+  # fit the candidates with nonzero stacking coefficients
+  fit_members()
+model_stack
+```
+
+```{r}
+test_results <- test_data |>
+  bind_cols(predict(model_stack, new_data = test_data, type = "prob"))
+```
+
+```{r}
+stack_preds <- predict(model_stack, new_data = test_data, type = "prob")
+stack_class_preds <- predict(model_stack, new_data = test_data, type = "class")
+results <- test_data |>
+  bind_cols(stack_preds) |>
+  bind_cols(stack_class_preds)
+```
+
+```{r}
+library(dplyr)
+library(pROC)
+library(yardstick)
+
+results <- results |> rename(.pred_1 = .pred_TRUE)
+
+stack_acc_value <- results |>
+  accuracy(truth = los_long, estimate = .pred_class)
+
+stack_roc_obj <- roc(
+  response = results$los_long,
+  predictor = results$.pred_1,  # or .pred_TRUE, after renaming
+  levels = rev(levels(results$los_long))
+)
+auc_value <- auc(stack_roc_obj)
+
+stack_metrics_df <- data.frame(
+  metric = c("stack_accuracy", "stack_auc"),
+  value = c(stack_acc_value$.estimate, auc_value)
+)
+
+stack_metrics_df
 ```
 
 
