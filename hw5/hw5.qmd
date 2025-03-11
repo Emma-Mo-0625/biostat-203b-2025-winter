@@ -48,6 +48,7 @@ library(dplyr)
 library(caret)
 library(tidymodels)
 library(ranger)
+library(tidyr)
 
 # Load dataset
 mimic_data <- readRDS("../hw4/mimiciv_shiny/mimic_icu_cohort.rds")
@@ -56,18 +57,18 @@ mimic_data <- readRDS("../hw4/mimiciv_shiny/mimic_icu_cohort.rds")
 icu_data <- mimic_data |>
   arrange(subject_id, hadm_id, stay_id) |>
   select(gender, age_intime, marital_status, race, first_careunit,
-         glucose, potassium, sodium, chloride, creatinine, wbc, bicarbonate, hematocrit,
-         heart_rate, temperature_fahrenheit, non_invasive_blood_pressure_diastolic,
-         respiratory_rate, non_invasive_blood_pressure_systolic,
-         los_long)
+         glucose, potassium, sodium, chloride, creatinine, wbc, 
+         bicarbonate, hematocrit, heart_rate, temperature_fahrenheit, 
+         non_invasive_blood_pressure_diastolic,
+         respiratory_rate, non_invasive_blood_pressure_systolic, los_long)
 ```
 
 
 ```{r}
 set.seed(203)
 
-icu_data_sorted <- icu_data %>%
-  filter(!is.na(los_long)) %>%  # drop rows where los_long is NA
+icu_data_sorted <- icu_data |>
+  filter(!is.na(los_long)) |>  # drop rows where los_long is NA
   mutate(los_long = as.factor(los_long)) # ensure it's a factor
 
 # Create a 50/50 split stratified by los_long
@@ -92,7 +93,8 @@ dim(test_data)
 # Convert categorical variables to factors
 rf_recipe <- recipe(los_long ~ ., data = train_data) |>
   # Convert categorical variables to factors
-  step_mutate_at(c("gender", "marital_status", "race", "first_careunit"), fn = as.factor) |>
+  step_mutate_at(c("gender", "marital_status", "race", "first_careunit"), 
+                 fn = as.factor) |>
   # Impute missing numeric predictors with the mean
   step_impute_mean(all_numeric_predictors()) |>
   # Impute missing categorical predictors with the mode
@@ -108,7 +110,7 @@ rf_spec <- rand_forest(
   trees = tune(),   # number of trees in the ensemble
   min_n = tune()
 ) |>
-  set_engine("ranger") |>
+  set_engine("ranger", importance = "impurity") |>
   set_mode("classification")
 rf_spec
 ```
@@ -173,8 +175,13 @@ final_rf_workflow
 ```{r}
 # Fit the final model on the training data
 final_rf_fit <- final_rf_workflow |> last_fit(data_split)
-final_rf_fit |> 
-  collect_metrics()
+rf_metrics <- final_rf_fit |> 
+  collect_metrics() |>
+  filter(.metric %in% c("accuracy", "roc_auc")) |>
+  select(.metric, .estimate) |>
+  pivot_wider(names_from = .metric, values_from = .estimate) |>
+  mutate(model = "Random Forest")
+rf_metrics
 ```
 
 
@@ -188,7 +195,8 @@ library(tidyverse)
 
 log_reg_recipe <- recipe(los_long ~ ., data = train_data) |>
   # Converts to factors
-  step_mutate_at(c("gender", "marital_status", "race", "first_careunit"), fn = as.factor) |>
+  step_mutate_at(c("gender", "marital_status", "race", "first_careunit"), 
+                 fn = as.factor) |>
   step_impute_mean(all_numeric_predictors()) |>
   step_impute_mode(all_nominal_predictors()) |>
   # zero-variance filter
@@ -272,9 +280,15 @@ final_log_reg_workflow
 ```{r}
 # Fit the whole training set, then predict the test cases
 final_log_reg_fit <- final_log_reg_workflow |> last_fit(data_split)
-final_log_reg_fit
+
 # Collect and view performance metrics on the test set
-final_log_reg_fit |> collect_metrics()
+logit_metrics <- final_log_reg_fit |> 
+  collect_metrics() |>
+  filter(.metric %in% c("accuracy", "roc_auc")) |>
+  select(.metric, .estimate) |>
+  pivot_wider(names_from = .metric, values_from = .estimate) |>
+  mutate(model = "Logistic Regression")
+logit_metrics
 ```
 
 ### Boosting (XGboost)
@@ -283,7 +297,8 @@ final_log_reg_fit |> collect_metrics()
 library(xgboost)
 
 xgb_recipe <- recipe(los_long ~ ., data = train_data) |>
-  step_mutate_at(c("gender", "marital_status", "race", "first_careunit"), fn = as.factor) |>
+  step_mutate_at(c("gender", "marital_status", "race", "first_careunit"), 
+                 fn = as.factor) |>
   step_impute_mean(all_numeric_predictors()) |>
   step_impute_mode(all_nominal_predictors()) |>
   step_zv(all_predictors()) |>
@@ -367,8 +382,13 @@ final_xgb_fit
 ```
 
 ```{r}
-final_xgb_fit |> 
-  collect_metrics()
+xgb_metrics <- final_xgb_fit |> 
+  collect_metrics() |> 
+  filter(.metric %in% c("accuracy", "roc_auc")) |>
+  select(.metric, .estimate) |>
+  pivot_wider(names_from = .metric, values_from = .estimate) |>
+  mutate(model = "XGBoost")
+xgb_metrics
 ```
 
 
@@ -412,9 +432,11 @@ library(yardstick)
 
 results <- results |> rename(.pred_1 = .pred_TRUE)
 
+# Accuracy
 stack_acc_value <- results |>
   accuracy(truth = los_long, estimate = .pred_class)
 
+# ROC AUC
 stack_roc_obj <- roc(
   response = results$los_long,
   predictor = results$.pred_1,  # or .pred_TRUE, after renaming
@@ -422,6 +444,7 @@ stack_roc_obj <- roc(
 )
 auc_value <- auc(stack_roc_obj)
 
+# Combine into a df
 stack_metrics_df <- data.frame(
   metric = c("stack_accuracy", "stack_auc"),
   value = c(stack_acc_value$.estimate, auc_value)
@@ -430,4 +453,101 @@ stack_metrics_df <- data.frame(
 stack_metrics_df
 ```
 
+```{r}
+stack_metrics_wide <- stack_metrics_df |>
+  pivot_wider(names_from = metric, values_from = value) |>
+  rename(accuracy = stack_accuracy, roc_auc = stack_auc) |>
+  mutate(model = "Stacking")
+
+stack_metrics_wide
+```
+
+### Final comparison
+
+Compare the accuracy and AUC
+
+```{r}
+model_comparison <- bind_rows(
+  rf_metrics,
+  logit_metrics,
+  xgb_metrics,
+  stack_metrics_wide
+)
+
+model_comparison
+```
+
+- Stacking has the highest AUC and accuracy, meaning that the ensemble improves performance.
+- Random forest and XGBoost have moderate AUC and accuracy
+- Logistic regression has the lowest accuracy and AUC, though the difference is slight.
+
+
+Find the most important features of each model
+
+```{r}
+## Random forest
+library(tidymodels)
+library(vip)
+
+# Extract the underlying parsnip model, then plot VIP
+final_rf_fit |>
+  extract_fit_parsnip() |>
+  vip::vip(num_features = 10)
+```
+
+- Random forest
+  - From the Variable Importance plot, the top 3 contributors are: 
+    - `non_invasive_blood_pressure_systolic`, `heart_rate`, and `hematocrit`
+  - They most frequently help differentiate between longer vs shorter stays
+  - These 3 variables contribute slightly more than the rest of the top 10 variables.
+
+
+```{r}
+## XGboost
+library(xgboost)
+library(tidymodels)
+library(vip)
+
+# Extract the underlying xgboost model
+xgb_model <- final_xgb_fit |>
+  extract_fit_parsnip()
+xgb_model <- xgb_model$fit
+
+# Use xgb.importance() + xgb.plot.importance()
+importance <- xgb.importance(model = xgb_model)
+xgb.plot.importance(importance)
+
+```
+
+- XGboost
+  - The most important feature is `temperature_fahrenheit`.
+  - It contributes dramatically more than the second variable (`non_invasive_blood_pressure_systolic`).
+
+
+```{r}
+## Logit
+library(broom)
+
+log_reg_model <- final_log_reg_fit |>
+  extract_fit_parsnip()
+
+coefs <- tidy(log_reg_model) |>
+  filter(term != "(Intercept)") |>
+  mutate(abs_estimate = abs(estimate)) |>
+  arrange(desc(abs_estimate))
+
+head(coefs, 10)  # top 10 largest absolute coefficients
+
+```
+
+- Logistic regression
+  - The top 3 contributors:
+    - `first_careunit` (negative), `heart_rate` (positive), and `respiratory_rate` (positive)
+  
+- Interpretability
+  - Stacking provides improvement in AUC and accuracy
+  - Logistic Regression is good at providing coefficient signs and magnitudes of predictors
+  - Random Forest and XGBoost are more complex but provide variable importance
+  - The most critical predictors across models: 
+    - `heart_rate`, `respiratory_rate` and `non_invasive_blood_pressure_systolic`.
 
