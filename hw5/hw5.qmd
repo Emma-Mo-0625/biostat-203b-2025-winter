@@ -63,8 +63,6 @@ icu_data <- mimic_data |>
 ```
 
 
-### Random Forest
-
 ```{r}
 set.seed(203)
 
@@ -87,6 +85,9 @@ dim(train_data)
 dim(test_data)
 ```
 
+
+### Random Forest
+
 ```{r}
 # Convert categorical variables to factors
 rf_recipe <- recipe(los_long ~ ., data = train_data) |>
@@ -98,7 +99,6 @@ rf_recipe <- recipe(los_long ~ ., data = train_data) |>
   step_impute_mode(all_nominal_predictors()) |>
   # Remove predictors with zero variance
   step_zv(all_predictors()) |>
-  
   print()
 ```
 
@@ -275,5 +275,94 @@ final_log_reg_fit
 final_log_reg_fit |> collect_metrics()
 ```
 
+### Boosting (XGboost)
+
+```{r}
+library(xgboost)
+
+xgb_recipe <- recipe(los_long ~ ., data = train_data) |>
+  step_mutate_at(c("gender", "marital_status", "race", "first_careunit"), fn = as.factor) |>
+  step_impute_mean(all_numeric_predictors()) |>
+  step_impute_mode(all_nominal_predictors()) |>
+  step_zv(all_predictors()) |>
+  step_dummy(all_nominal_predictors()) |> 
+  print()
+```
+
+```{r}
+# tune key hyperparameters:
+#   - trees: number of trees (boosting rounds)
+#   - learn_rate: learning rate (shrinkage)
+#   - tree_depth: maximum depth of trees
+xgb_spec <- boost_tree(
+  trees = tune(), 
+  learn_rate = tune(),
+  tree_depth = tune()
+) |>
+  set_engine("xgboost") |>
+  set_mode("classification")
+xgb_spec
+```
+
+```{r}
+xgb_workflow <- workflow() |>
+  add_recipe(xgb_recipe) |>
+  add_model(xgb_spec)
+xgb_workflow
+```
+
+```{r}
+narrow_xgb_grid <- grid_regular(
+  trees(range = c(110, 130)),        
+  learn_rate(range = c(0.05, 0.3)),    
+  tree_depth(range = c(3, 3)),         
+  levels = 3
+)
+narrow_xgb_grid
+```
+
+```{r}
+# Create 5-fold cross-validation, stratified by los_long
+set.seed(203)
+icu_folds <- vfold_cv(train_data, v = 5, strata = los_long)
+```
+
+```{r}
+set.seed(203)
+xgb_tune_results <- tune_grid(
+  xgb_workflow,
+  resamples = icu_folds,
+  grid = narrow_xgb_grid,
+  metrics = metric_set(roc_auc, accuracy)
+)
+xgb_tune_results
+```
+
+```{r}
+# Show the top 5 models
+xgb_tune_results |> show_best(metric = "roc_auc")
+
+# select the best one
+best_xgb_params <- xgb_tune_results |>
+  select_best(metric = "roc_auc")
+best_xgb_params
+```
+
+```{r}
+final_xgb_workflow <- xgb_workflow |>
+  finalize_workflow(best_xgb_params)
+final_xgb_workflow
+```
+
+```{r}
+final_xgb_fit <- final_xgb_workflow |>
+  last_fit(data_split)
+final_xgb_fit
+```
+
+```{r}
+final_xgb_fit |> 
+  collect_metrics()
+```
 
 
