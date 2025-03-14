@@ -463,7 +463,7 @@ Number of rows: 30195426
 
 - `read.csv` (base R) vs `read_csv` (tidyverse) vs `fread` (data.table)
   - `read.csv` (base R): easy to use, but is the slowest and uses the most memory
-  - `read_csv` (tidyverse): faster than `read.csv`, read csv efficiently, understand column type & optimize memory usage and analysis, but still slow and uses more memory
+  - `read_csv` (tidyverse: readr): faster than `read.csv`, read csv efficiently, understand column type & optimize memory usage and analysis, but still slow and uses more memory
     - When reading filtered data, still load all columns and just keep the filtered data, so still inefficient.
   - `fread`(data.table): the fastest and uses the least memory
 

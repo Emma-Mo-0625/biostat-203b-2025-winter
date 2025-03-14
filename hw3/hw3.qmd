@@ -97,7 +97,8 @@ transfers_info <- transfers %>%
     event_type = "ADT",
     start_date = as.Date(intime),
     end_date   = as.Date(outtime),
-    is_icu     = str_detect(careunit, "ICU|CCU")
+    is_icu     = str_detect(careunit, "ICU|CCU"),
+    careunit = as.factor(careunit)
   )
 
 # Process lab events, converting charttime to Date
@@ -176,6 +177,12 @@ ggplot() +
   theme_minimal() +
   theme(legend.position = "bottom") +
   scale_x_date(date_breaks = "2 weeks", date_labels = "%b %d")
+  guides(
+      color = guide_legend(order = 1, title = "Care Unit"),
+      linewidth = guide_legend(order = 2, title = "ICU/CCU"),
+      shape = guide_legend(order = 3, title = "Procedure")
+    )
+
 ```
 
 
@@ -654,7 +661,8 @@ mimic_icu_cohort <- icustays_tble %>%
   left_join(patients_tble, by = "subject_id") %>%
   
   # 3) Filter to adult ICU stays
-  filter(anchor_age >= 18) %>%
+  mutate(age_intime = anchor_age + (year(intime) - anchor_year)) |>
+  filter(age_intime >= 18) |>
   
   # 4) Join the last lab measurements before ICU (one row per ICU stay)
   left_join(labevents_tble, by = c("subject_id", "stay_id")) %>%
