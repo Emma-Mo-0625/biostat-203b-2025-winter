@@ -108,7 +108,7 @@ rf_recipe <- recipe(los_long ~ ., data = train_data) |>
 rf_spec <- rand_forest(
   mtry  = tune(),   # number of variables randomly sampled at each split
   trees = tune(),   # number of trees in the ensemble
-  min_n = tune()
+  min_n = tune()    # minimum number of observations in terminal nodes
 ) |>
   set_engine("ranger", importance = "impurity") |>
   set_mode("classification")
